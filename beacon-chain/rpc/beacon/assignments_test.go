@@ -393,3 +393,97 @@ func TestServer_ListAssignments_CanFilterPubkeysIndices_WithPagination(t *testin
 
 	assert.DeepEqual(t, wantedRes, res, "Did not receive wanted assignments")
 }
+
+func TestServer_NextEpochProposerList(t *testing.T) {
+	helpers.ClearCache()
+	db := dbTest.SetupDB(t)
+	ctx := context.Background()
+	count := 10000
+	validators := make([]*ethpb.Validator, 0, count)
+	withdrawCred := make([]byte, 32)
+	for i := 0; i < count; i++ {
+		pubKey := make([]byte, params.BeaconConfig().BLSPubkeyLength)
+		binary.LittleEndian.PutUint64(pubKey, uint64(i))
+		val := &ethpb.Validator{
+			PublicKey:             pubKey,
+			WithdrawalCredentials: withdrawCred,
+			ExitEpoch:             params.BeaconConfig().FarFutureEpoch,
+		}
+		validators = append(validators, val)
+	}
+
+	config := params.BeaconConfig().Copy()
+	oldConfig := config.Copy()
+	config.SlotsPerEpoch = 32
+	params.OverrideBeaconConfig(config)
+
+	defer func() {
+		params.OverrideBeaconConfig(oldConfig)
+	}()
+
+	blk := testutil.NewBeaconBlock().Block
+	blockRoot, err := blk.HashTreeRoot()
+	require.NoError(t, err)
+	s, err := testutil.NewBeaconState()
+	require.NoError(t, err)
+	require.NoError(t, s.SetValidators(validators))
+	require.NoError(t, db.SaveState(ctx, s, blockRoot))
+	require.NoError(t, db.SaveGenesisBlockRoot(ctx, blockRoot))
+
+	bs := &Server{
+		BeaconDB: db,
+		FinalizationFetcher: &mock.ChainService{
+			FinalizedCheckPoint: &ethpb.Checkpoint{
+				Epoch: 0,
+			},
+		},
+		GenesisTimeFetcher: &mock.ChainService{},
+		StateGen:           stategen.New(db),
+	}
+
+	t.Run("should return 32 proposers for epoch 0", func(t *testing.T) {
+		ctx := context.Background()
+		assignments, err := bs.GetProposerListForEpoch(ctx, types.Epoch(0))
+		require.NoError(t, err)
+		assert.Equal(t, types.Epoch(0), assignments.Epoch)
+		// This is genesis epoch, so there will be 31 slots instead of 32
+		require.Equal(t, int(config.SlotsPerEpoch)-1, len(assignments.Assignments))
+	})
+
+	t.Run("should return 32 proposer for each epoch", func(t *testing.T) {
+		maxEpochs := 4
+		// Go through 4 epochs
+		count := types.Slot(maxEpochs) * config.SlotsPerEpoch
+		// Should return the proper genesis block if it exists.
+		parentRoot := [32]byte{1, 2, 3}
+		blk := testutil.NewBeaconBlock()
+		blk.Block.ParentRoot = parentRoot[:]
+		root, err := blk.Block.HashTreeRoot()
+		require.NoError(t, err)
+		require.NoError(t, db.SaveBlock(ctx, blk))
+		require.NoError(t, db.SaveGenesisBlockRoot(ctx, root))
+
+		parentRoot = root
+
+		blks := make([]*ethpb.SignedBeaconBlock, count)
+		for i := types.Slot(0); i < count; i++ {
+			b := testutil.NewBeaconBlock()
+			b.Block.Slot = i
+			b.Block.ParentRoot = parentRoot[:]
+			blks[i] = b
+			currentRoot, err := b.Block.HashTreeRoot()
+			require.NoError(t, err)
+			parentRoot = currentRoot
+		}
+		require.NoError(t, db.SaveBlocks(ctx, blks))
+		ctx := context.Background()
+
+		// Start from epoch 1
+		for index := 1; index < maxEpochs; index++ {
+			assignments, err := bs.GetProposerListForEpoch(ctx, types.Epoch(index))
+			require.NoError(t, err)
+			assert.Equal(t, types.Epoch(index), assignments.Epoch)
+			require.Equal(t, config.SlotsPerEpoch, len(assignments.Assignments))
+		}
+	})
+}
