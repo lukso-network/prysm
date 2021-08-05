@@ -137,6 +137,7 @@ func (v *validator) waitForActivation(ctx context.Context, accountsChangedChan <
 				if errors.Is(err, io.EOF) {
 					break
 				}
+				log.Printf("validator statuses")
 				// If context is canceled we return from the function.
 				if ctx.Err() == context.Canceled {
 					return errors.Wrap(ctx.Err(), "context has been canceled so shutting down the loop")

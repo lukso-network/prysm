@@ -358,6 +358,8 @@ func (s *Service) AreAllDepositsProcessed() (bool, error) {
 // SECONDS_PER_ETH1_BLOCK * ETH1_FOLLOW_DISTANCE <= current_unix_time
 func (s *Service) followBlockHeight(ctx context.Context) (uint64, error) {
 	latestValidBlock := uint64(0)
+	log.Infof("s.latestEth1Data.BlockHeight: %v, Eth1FollowDistance: %v", s.latestEth1Data.BlockHeight, params.BeaconConfig().Eth1FollowDistance)
+
 	if s.latestEth1Data.BlockHeight > params.BeaconConfig().Eth1FollowDistance {
 		latestValidBlock = s.latestEth1Data.BlockHeight - params.BeaconConfig().Eth1FollowDistance
 	}

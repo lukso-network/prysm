@@ -154,7 +154,10 @@ func (s *Service) ProcessDepositLog(ctx context.Context, depositLog gethTypes.Lo
 	}
 
 	// We always store all historical deposits in the DB.
-	s.cfg.DepositCache.InsertDeposit(ctx, deposit, depositLog.BlockNumber, index, s.depositTrie.Root())
+	err = s.cfg.DepositCache.InsertDeposit(ctx, deposit, depositLog.BlockNumber, index, s.depositTrie.Root())
+	if err != nil {
+		return errors.Wrap(err, "unable to insert deposit into cache")
+	}
 	validData := true
 	if !s.chainStartData.Chainstarted {
 		s.chainStartData.ChainstartDeposits = append(s.chainStartData.ChainstartDeposits, deposit)
@@ -286,6 +289,8 @@ func (s *Service) processPastLogs(ctx context.Context) error {
 
 	batchSize := s.cfg.Eth1HeaderReqLimit
 	additiveFactor := uint64(float64(batchSize) * additiveFactorMultiplier)
+
+	log.Infof("Current block number: %v, latestFollowHeight: %v, deploymentBlock: %v", currentBlockNum, latestFollowHeight, deploymentBlock)
 
 	for currentBlockNum < latestFollowHeight {
 		start := currentBlockNum
