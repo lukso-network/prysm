@@ -28,5 +28,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Test the code
-        run: bazel test //...
+      - name: Test beacon-chain client
+        run: bazel test //cmd/beacon-chain:go_default_test
+
+      - name: Test validator client
+        run: bazel test //cmd/validator:go_default_test
