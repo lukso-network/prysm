@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        platform: [ ubuntu-18.04 ]
+        platform: [ ubuntu-18.04, macos-11, windows-latest ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -28,5 +28,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build the code
+      - name: Build beacon-chain client
         run: bazel build //beacon-chain
+
+      - name: Build validator
+        run: bazel build //validator
