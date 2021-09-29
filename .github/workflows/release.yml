@@ -33,3 +33,14 @@ jobs:
 
       - name: Build validator
         run: bazel build //validator
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release
+          draft: true
+          files: |
+            ./bazel-bin/cmd/beacon-chain/beacon-chain_/beacon-chain
+            ./bazel-bin/cmd/validator/validator_/validator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
