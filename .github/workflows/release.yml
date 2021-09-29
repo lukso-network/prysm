@@ -6,11 +6,11 @@ on:
       - 'feature/github-actions-ci-cd'
 
 jobs:
-  test:
+  release:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        platform: [ ubuntu-18.04, macos-11 ]
+        platform: [ ubuntu-18.04, macos-11, windows-latest ]
 
     runs-on: ${{ matrix.platform }}
 
