@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        platform: [ ubuntu-18.04, macos-11, windows-latest ]
+        platform: [ windows-latest ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -29,18 +29,4 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build beacon-chain client
-        run: bazel build //beacon-chain
-
-      - name: Build validator
-        run: bazel build //validator
-
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release
-          draft: true
-          files: |
-            ./bazel-bin/cmd/beacon-chain/beacon-chain_/beacon-chain
-            ./bazel-bin/cmd/validator/validator_/validator
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./bazel.sh --bazelrc=.buildkite-bazelrc build --config=linux_amd64 --config=remote-cache --config=nostamp  //beacon-chain //validator
