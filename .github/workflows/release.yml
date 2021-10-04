@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        platform: [ ubuntu-18.04, macos-11 ]
+        platform: [ ubuntu-18.04 ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -33,3 +33,11 @@ jobs:
 
       - name: Build validator
         run: bazel build //validator
+
+      - name: Run beacon-chain for Windows
+        if: matrix.platform == 'ubuntu-18.04'
+        run: bazel build //beacon-chain:beacon-chain --config=windows_amd64_docker
+
+      - name: Run validator for Windows
+        if: matrix.platform == 'ubuntu-18.04'
+        run: bazel build //validator:validator --config=windows_amd64_docker
