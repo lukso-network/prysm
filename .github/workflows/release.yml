@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         go-version: [ 1.16 ]
-        platform: [ ubuntu-18.04 ]
+        platform: [ ubuntu-18.04, macos-11 ]
 
     runs-on: ${{ matrix.platform }}
 
@@ -29,15 +29,34 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Build beacon-chain client
-        run: bazel build //beacon-chain
+        run: |
+          bazel build //beacon-chain
+          mv ./bazel-bin/cmd/beacon-chain/beacon-chain_/beacon-chain ./bazel-bin/cmd/beacon-chain/beacon-chain_/vanguard-linux
 
       - name: Build validator
-        run: bazel build //validator
+        run: |
+          bazel build //validator
+          mv ./bazel-bin/cmd/validator/validator_/validator ./bazel-bin/cmd/validator/validator_/lukso-validator-linux
 
       - name: Run beacon-chain for Windows
         if: matrix.platform == 'ubuntu-18.04'
-        run: bazel build //beacon-chain:beacon-chain --config=windows_amd64_docker
+        run: |
+          bazel build //beacon-chain:beacon-chain --config=windows_amd64_docker
+          mv ./bazel-bin/cmd/beacon-chain/beacon-chain_/beacon-chain.exe ./bazel-bin/cmd/beacon-chain/beacon-chain_/vanguard-windows.exe
 
       - name: Run validator for Windows
         if: matrix.platform == 'ubuntu-18.04'
-        run: bazel build //validator:validator --config=windows_amd64_docker
+        run: |
+          bazel build //validator:validator --config=windows_amd64_docker
+          mv ./bazel-bin/cmd/validator/validator_/validator.exe ./bazel-bin/cmd/validator/validator_/lukso-validator-windows.exe
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release
+          draft: true
+          files: |
+            ./bazel-bin/cmd/beacon-chain/beacon-chain_/vanguard-*
+            ./bazel-bin/cmd/validator/validator_/lukso-validator-*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
