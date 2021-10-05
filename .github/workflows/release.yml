@@ -41,13 +41,13 @@ jobs:
       - name: Run beacon-chain for Darwin
         if: matrix.platform == 'macos-11'
         run: |
-          bazel build //beacon-chain:beacon-chain --config=windows_amd64_docker
+          bazel build //beacon-chain:beacon-chain
           mv ./bazel-bin/cmd/beacon-chain/beacon-chain_/beacon-chain ./bazel-bin/cmd/beacon-chain/beacon-chain_/vanguard-Darwin-x86_64
 
       - name: Run validator for Darwin
         if: matrix.platform == 'macos-11'
         run: |
-          bazel build //validator:validator --config=windows_amd64_docker
+          bazel build //validator:validator
           mv ./bazel-bin/cmd/validator/validator_/validator ./bazel-bin/cmd/validator/validator_/lukso-validator-Darwin-x86_64
 
       - name: Run beacon-chain for Windows
