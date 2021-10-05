@@ -19,6 +19,7 @@ import (
 
 var (
 	beaconRPC               = flag.String("beacon-rpc", "localhost:4000", "Beacon chain gRPC endpoint")
+	beaconIPC               = flag.String("beacon-ipc", "./socket.ipc", "Beacon chain IPC endpoint")
 	port                    = flag.Int("port", 8000, "Port to serve on")
 	ethApiPort              = flag.Int("port", 8001, "Port to serve Ethereum API on")
 	host                    = flag.String("host", "127.0.0.1", "Host to serve on")
@@ -45,6 +46,7 @@ func main() {
 		[]gateway.PbMux{gatewayConfig.V1Alpha1PbMux, gatewayConfig.V1PbMux},
 		gatewayConfig.Handler,
 		*beaconRPC,
+		*beaconIPC,
 		fmt.Sprintf("%s:%d", *host, *port),
 	).WithAllowedOrigins(strings.Split(*allowedOrigins, ",")).
 		WithMaxCallRecvMsgSize(uint64(*grpcMaxMsgSize)).
