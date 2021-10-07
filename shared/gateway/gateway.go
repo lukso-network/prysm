@@ -59,7 +59,6 @@ func New(
 	pbHandlers []PbMux,
 	muxHandler MuxHandler,
 	remoteAddr,
-	ipcAddr,
 	gatewayAddress string,
 ) *Gateway {
 	g := &Gateway{
@@ -69,7 +68,6 @@ func New(
 		gatewayAddr:    gatewayAddress,
 		ctx:            ctx,
 		remoteAddr:     remoteAddr,
-		ipcAddr:        ipcAddr,
 		allowedOrigins: []string{},
 	}
 	return g
