@@ -73,7 +73,9 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release
+          name: Release v0.1.0-develop
+          tag_name: v0.1.0-develop
+          target_commitish: ${{ github.sha }}
           draft: false
           files: |
             ./bazel-bin/cmd/beacon-chain/beacon-chain_/vanguard-*
