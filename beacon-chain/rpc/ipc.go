@@ -1,6 +1,7 @@
 package rpc
 
 import (
+	"fmt"
 	"net"
 	"os"
 )
@@ -19,15 +20,18 @@ func (s *Service) cleanupIpc() {
 }
 
 func (s *Service) serveIpc() error {
-	listener, err := net.Listen(protocol, sockAddr)
+	ipcListener, err := net.Listen(protocol, sockAddr)
 	if err != nil {
 		return err
 	}
 
-	err = s.grpcServer.Serve(listener)
-	if err != nil {
-		return err
-	}
+	go func() {
+		if s.listener != nil {
+			if err := s.grpcServer.Serve(ipcListener); err != nil {
+				panic(fmt.Sprintf("Could not serve gRPC: %v", err))
+			}
+		}
+	}()
 
 	return nil
 }

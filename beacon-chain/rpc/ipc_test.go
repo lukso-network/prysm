@@ -2,36 +2,49 @@ package rpc
 
 import (
 	"context"
+	"net"
+	"os"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/prysmaticlabs/prysm/shared/testutil/assert"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-	"net"
-	"os"
+
 	"testing"
-	"time"
 )
 
 func TestServeIpc(t *testing.T) {
-	rootCtx := context.Background()
+	ctx := context.Background()
 	timeout := 5 * time.Second
 
 	service := Service{}
 
-	var opts []grpc.ServerOption
-	service.grpcServer = grpc.NewServer(opts...)
+	grpcServerOpts := []grpc.ServerOption{
+		grpc.ChainStreamInterceptor(),
+	}
+	service.grpcServer = grpc.NewServer(grpcServerOpts...)
 
 	err := service.serveIpc()
 	if err != nil {
 		panic(err.Error())
 	}
 
+	fileInfo, err := os.Stat(sockAddr)
+	if err != nil {
+		panic(err.Error())
+	}
+	assert.NotNil(t, fileInfo)
+
 	dialer := func(addr string, t time.Duration) (net.Conn, error) {
 		return net.Dial(protocol, addr)
 	}
 
-	conn, err := grpc.Dial(sockAddr, grpc.WithInsecure(), grpc.WithDialer(dialer), grpc.WithTimeout(timeout))
+	dialOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
+	}
+
+	conn, err := grpc.DialContext(ctx, sockAddr, dialOpts...)
 	defer func(conn *grpc.ClientConn) {
 		err = conn.Close()
 	}(conn)
@@ -39,22 +52,16 @@ func TestServeIpc(t *testing.T) {
 	assert.DeepEqual(t, nil, err)
 	assert.NotNil(t, conn)
 
-	fileInfo, err := os.Stat(sockAddr)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	assert.Equal(t, nil, fileInfo)
-
 	t.Run("Check communication", func(t *testing.T) {
 		var req, reply proto.Message
-		ctx, cancel := context.WithTimeout(rootCtx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		assert.NotNil(t, ctx)
 
-		if err := conn.Invoke(ctx, "/grpc.testing.TestService/UnimplementedCall", req, reply); err == nil || status.Code(err) != codes.Unimplemented {
-			assert.Equal(t, "", err.Error())
+		err := conn.Invoke(ctx, "/ethereum.eth.v1alpha1.BeaconChain/GetBeaconConfig", req, reply)
+		if err != nil {
+			t.Fatalf("error is = %v", err)
 		}
 	})
 }
