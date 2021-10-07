@@ -18,14 +18,16 @@ func (s *Service) cleanupIpc() {
 	}
 }
 
-func (s *Service) serveIpc() {
+func (s *Service) serveIpc() error {
 	listener, err := net.Listen(protocol, sockAddr)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = s.grpcServer.Serve(listener)
 	if err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
