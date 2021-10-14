@@ -25,16 +25,6 @@ var (
 		"key2":       []string{"value2"},
 		"user-agent": []string{fmt.Sprintf("test/0.0.1 grpc-go/%s", grpc.Version)},
 	}
-	// For headers sent from server:
-	testHeaderMetadata = metadata.MD{
-		"hkey1": []string{"headerValue1"},
-		"hkey2": []string{"headerValue2"},
-	}
-	// For trailers sent from server:
-	testTrailerMetadata = metadata.MD{
-		"tkey1": []string{"trailerValue1"},
-		"tkey2": []string{"trailerValue2"},
-	}
 	// The id for which the service handler should return error.
 	errorID int32 = 32202
 )
