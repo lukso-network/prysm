@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +20,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+const (
+	protocol = "unix"
+)
+
 // Initialize a client connect to a beacon node gRPC endpoint.
 func (s *Server) registerBeaconClient() error {
 	streamInterceptor := grpc.WithStreamInterceptor(middleware.ChainStreamClient(
@@ -26,12 +31,17 @@ func (s *Server) registerBeaconClient() error {
 		grpc_prometheus.StreamClientInterceptor,
 		grpc_retry.StreamClientInterceptor(),
 	))
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial(protocol, addr)
+	}
 	dialOpts := client.ConstructDialOptions(
 		s.clientMaxCallRecvMsgSize,
 		s.clientWithCert,
 		s.clientGrpcRetries,
 		s.clientGrpcRetryDelay,
 		streamInterceptor,
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	)
 	if dialOpts == nil {
 		return errors.New("no dial options for beacon chain gRPC client")

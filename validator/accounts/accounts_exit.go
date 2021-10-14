@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/pkg/errors"
@@ -35,7 +37,10 @@ type PerformExitCfg struct {
 	FormattedPubKeys []string
 }
 
-const exitPassphrase = "Exit my validator"
+const (
+	protocol       = "unix"
+	exitPassphrase = "Exit my validator"
+)
 
 // ExitAccountsCli performs a voluntary exit on one or more accounts.
 func ExitAccountsCli(cliCtx *cli.Context, r io.Reader) error {
@@ -228,11 +233,17 @@ func prepareAllKeys(validatingKeys [][48]byte) (raw [][]byte, formatted []string
 }
 
 func prepareClients(cliCtx *cli.Context) (*ethpb.BeaconNodeValidatorClient, *ethpb.NodeClient, error) {
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial(protocol, addr)
+	}
+
 	dialOpts := client.ConstructDialOptions(
 		cliCtx.Int(cmd.GrpcMaxCallRecvMsgSizeFlag.Name),
 		cliCtx.String(flags.CertFlag.Name),
 		cliCtx.Uint(flags.GrpcRetriesFlag.Name),
 		cliCtx.Duration(flags.GrpcRetryDelayFlag.Name),
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	)
 	if dialOpts == nil {
 		return nil, nil, errors.New("failed to construct dial options")
@@ -241,7 +252,7 @@ func prepareClients(cliCtx *cli.Context) (*ethpb.BeaconNodeValidatorClient, *eth
 	grpcHeaders := strings.Split(cliCtx.String(flags.GrpcHeadersFlag.Name), ",")
 	cliCtx.Context = grpcutils.AppendHeaders(cliCtx.Context, grpcHeaders)
 
-	conn, err := grpc.DialContext(cliCtx.Context, cliCtx.String(flags.BeaconRPCProviderFlag.Name), dialOpts...)
+	conn, err := grpc.DialContext(cliCtx.Context, cliCtx.String(flags.BeaconIPCProviderFlag.Name), dialOpts...)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "could not dial endpoint %s", flags.BeaconRPCProviderFlag.Name)
 	}

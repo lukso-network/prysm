@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -76,6 +77,10 @@ func (s *Service) startSlasherClient() ethsl.SlasherClient {
 
 	s.ctx = grpcutils.AppendHeaders(s.ctx, s.grpcHeaders)
 
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial("unix", addr)
+	}
+
 	opts := []grpc.DialOption{
 		dialOpt,
 		grpc.WithDefaultCallOptions(
@@ -94,6 +99,8 @@ func (s *Service) startSlasherClient() ethsl.SlasherClient {
 			grpc_retry.UnaryClientInterceptor(),
 			grpcutils.LogRequests,
 		)),
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	}
 	conn, err := grpc.DialContext(s.ctx, s.cfg.Endpoint, opts...)
 	if err != nil {

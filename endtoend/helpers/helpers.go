@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -197,6 +198,24 @@ func NewLocalConnection(ctx context.Context, port int) (*grpc.ClientConn, error)
 	endpoint := fmt.Sprintf("127.0.0.1:%d", port)
 	dialOpts := []grpc.DialOption{
 		grpc.WithInsecure(),
+	}
+	conn, err := grpc.DialContext(ctx, endpoint, dialOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return conn, nil
+}
+
+// NewLocalIpcConnection creates and returns IPC socket connection on a given socket path.
+func NewLocalIpcConnection(ctx context.Context, socketPath string) (*grpc.ClientConn, error) {
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial("unix", addr)
+	}
+	endpoint := fmt.Sprintf(socketPath)
+	dialOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	}
 	conn, err := grpc.DialContext(ctx, endpoint, dialOpts...)
 	if err != nil {

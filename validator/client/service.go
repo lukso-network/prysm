@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -132,11 +133,16 @@ func NewValidatorService(ctx context.Context, cfg *Config) (*ValidatorService, e
 // Start the validator service. Launches the main go routine for the validator
 // client.
 func (v *ValidatorService) Start() {
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial("unix", addr)
+	}
 	dialOpts := ConstructDialOptions(
 		v.maxCallRecvMsgSize,
 		v.withCert,
 		v.grpcRetries,
 		v.grpcRetryDelay,
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	)
 	if dialOpts == nil {
 		return
