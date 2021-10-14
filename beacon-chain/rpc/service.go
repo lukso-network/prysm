@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/url"
 	"sync"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -138,8 +139,12 @@ func NewService(ctx context.Context, cfg *Config) *Service {
 
 // Start the gRPC server.
 func (s *Service) Start() {
-	address := fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
-	lis, err := net.Listen("tcp", address)
+	address, protocol, err := s.prepareRpcAddressAndProtocol()
+	if err != nil {
+		log.Errorf("Could not prepare proper address and protocol for net.Listen in Start() %s %s: %v", address, protocol, err)
+	}
+
+	lis, err := net.Listen(protocol, address)
 	if err != nil {
 		log.Errorf("Could not listen to port in Start() %s: %v", address, err)
 	}
@@ -384,5 +389,23 @@ func (s *Service) logNewClientConnection(ctx context.Context) {
 			}).Infof("New gRPC client connected to beacon node")
 			s.connectedRPCClients[clientInfo.Addr] = true
 		}
+	}
+}
+
+// prepareRpcAddressAndProtocol returns a RPC address and protocol.
+// It can be HTTP/S layer or IPC socket, tcp or unix socket.
+func (s *Service) prepareRpcAddressAndProtocol() (string, string, error) {
+	address := fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
+	u, err := url.Parse(address)
+	if err != nil {
+		return "", "", err
+	}
+	switch u.Scheme {
+	case "http", "https":
+		return address, "tcp", nil
+	case "":
+		return s.cfg.Host, "unix", nil
+	default:
+		return "", "", fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
 	}
 }
