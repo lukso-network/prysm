@@ -32,12 +32,6 @@ var (
 		Usage: "Beacon node RPC provider endpoint",
 		Value: "127.0.0.1:4000",
 	}
-	// BeaconIPCProviderFlag defines a beacon node IPC endpoint.
-	BeaconIPCProviderFlag = &cli.StringFlag{
-		Name:  "beacon-ipc",
-		Usage: "Beacon node IPC provider socket",
-		Value: "./vanguard.sock",
-	}
 	// BeaconRPCGatewayProviderFlag defines a beacon node JSON-RPC endpoint.
 	BeaconRPCGatewayProviderFlag = &cli.StringFlag{
 		Name:  "beacon-rpc-gateway-provider",
@@ -72,12 +66,6 @@ var (
 		Name:  "slasher-rpc-provider",
 		Usage: "Slasher node RPC provider endpoint",
 		Value: "127.0.0.1:4002",
-	}
-	// SlasherIPCProviderFlag defines a slasher node RPC endpoint.
-	SlasherIPCProviderFlag = &cli.StringFlag{
-		Name:  "slasher-ipc",
-		Usage: "Slasher node IPC provider socket",
-		Value: "./vanguard.sock",
 	}
 	// SlasherCertFlag defines a flag for the slasher node's TLS certificate.
 	SlasherCertFlag = &cli.StringFlag{
