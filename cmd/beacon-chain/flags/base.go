@@ -184,7 +184,7 @@ var (
 	}
 	// OrcRpcProviderFlag defines a orchestrator node RPC endpoint
 	OrcRpcProviderFlag = &cli.StringFlag{
-		Name:  "orc-http-provider",
-		Usage: "A orchestrator string rpc endpoint. This is our orchestrator client http endpoint.",
+		Name:  "orc-rpc-provider",
+		Usage: "A orchestrator string rpc endpoint. This is our orchestrator client http endpoint or socket path.",
 	}
 )
