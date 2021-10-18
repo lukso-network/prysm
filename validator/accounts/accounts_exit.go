@@ -252,7 +252,7 @@ func prepareClients(cliCtx *cli.Context) (*ethpb.BeaconNodeValidatorClient, *eth
 	grpcHeaders := strings.Split(cliCtx.String(flags.GrpcHeadersFlag.Name), ",")
 	cliCtx.Context = grpcutils.AppendHeaders(cliCtx.Context, grpcHeaders)
 
-	conn, err := grpc.DialContext(cliCtx.Context, cliCtx.String(flags.BeaconIPCProviderFlag.Name), dialOpts...)
+	conn, err := grpc.DialContext(cliCtx.Context, cliCtx.String(flags.BeaconRPCProviderFlag.Name), dialOpts...)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "could not dial endpoint %s", flags.BeaconRPCProviderFlag.Name)
 	}

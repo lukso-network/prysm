@@ -384,7 +384,7 @@ func (c *ValidatorClient) registerPrometheusService(cliCtx *cli.Context) error {
 func (c *ValidatorClient) registerValidatorService(
 	keyManager keymanager.IKeymanager,
 ) error {
-	endpoint := c.cliCtx.String(flags.BeaconIPCProviderFlag.Name)
+	endpoint := c.cliCtx.String(flags.BeaconRPCProviderFlag.Name)
 	dataDir := c.cliCtx.String(cmd.DataDirFlag.Name)
 	logValidatorBalances := !c.cliCtx.Bool(flags.DisablePenaltyRewardLogFlag.Name)
 	emitAccountMetrics := !c.cliCtx.Bool(flags.DisableAccountMetricsFlag.Name)
@@ -442,7 +442,7 @@ func (c *ValidatorClient) registerValidatorService(
 	return c.services.RegisterService(v)
 }
 func (c *ValidatorClient) registerSlasherService() error {
-	endpoint := c.cliCtx.String(flags.SlasherIPCProviderFlag.Name)
+	endpoint := c.cliCtx.String(flags.SlasherRPCProviderFlag.Name)
 	if endpoint == "" {
 		return errors.New("external slasher feature flag is set but no slasher endpoint is configured")
 
@@ -477,7 +477,7 @@ func (c *ValidatorClient) registerRPCService(cliCtx *cli.Context, km keymanager.
 	rpcHost := cliCtx.String(flags.RPCHost.Name)
 	rpcPort := cliCtx.Int(flags.RPCPort.Name)
 	nodeGatewayEndpoint := cliCtx.String(flags.BeaconRPCGatewayProviderFlag.Name)
-	beaconClientEndpoint := cliCtx.String(flags.BeaconIPCProviderFlag.Name)
+	beaconClientEndpoint := cliCtx.String(flags.BeaconRPCProviderFlag.Name)
 	maxCallRecvMsgSize := c.cliCtx.Int(cmd.GrpcMaxCallRecvMsgSizeFlag.Name)
 	grpcRetries := c.cliCtx.Uint(flags.GrpcRetriesFlag.Name)
 	grpcRetryDelay := c.cliCtx.Duration(flags.GrpcRetryDelayFlag.Name)
