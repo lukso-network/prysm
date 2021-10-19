@@ -394,11 +394,11 @@ func (s *Service) logNewClientConnection(ctx context.Context) {
 
 // prepareRpcAddressAndProtocol returns a RPC address and protocol.
 // It can be HTTP/S layer or IPC socket, tcp or unix socket.
-func (s *Service) prepareRpcAddressAndProtocol() (string, string, error) {
-	address := fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
+func (s *Service) prepareRpcAddressAndProtocol() (address string, protocol string, err error) {
+	address = fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
 	u, err := url.Parse(address)
 	if err != nil {
-		return "", "", err
+		return
 	}
 	switch u.Scheme {
 	case "http", "https":
@@ -406,6 +406,6 @@ func (s *Service) prepareRpcAddressAndProtocol() (string, string, error) {
 	case "":
 		return s.cfg.Host, "unix", nil
 	default:
-		return "", "", fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
+		return address, protocol, fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
 	}
 }
