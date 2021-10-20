@@ -76,6 +76,7 @@ type Service struct {
 	pendingBlockCache  *cache.PendingBlocksCache
 	confirmedBlockCh   chan *ethpb.SignedBeaconBlock
 	orcRPCClient       orchestrator.Client
+	latestSentEpoch    types.Epoch
 }
 
 // Config options for the service.

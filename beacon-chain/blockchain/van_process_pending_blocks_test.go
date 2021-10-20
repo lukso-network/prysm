@@ -37,11 +37,9 @@ func TestService_PublishBlock(t *testing.T) {
 	wrappedGenesisBlk := wrapper.WrappedPhase0SignedBeaconBlock(genesis)
 	assert.NoError(t, beaconDB.SaveBlock(ctx, wrappedGenesisBlk))
 	require.NoError(t, err)
-	st, err := testutil.NewBeaconState()
-	require.NoError(t, err)
 	b := testutil.NewBeaconBlock()
 	wrappedBlk := wrapper.WrappedPhase0SignedBeaconBlock(b)
-	s.publishBlock(wrappedBlk, st.Copy())
+	s.publishBlock(wrappedBlk)
 	time.Sleep(3 * time.Second)
 	if recvd := len(s.blockNotifier.(*mock.MockBlockNotifier).ReceivedEvents()); recvd < 1 {
 		t.Errorf("Received %d pending block notifications, expected at least 1", recvd)

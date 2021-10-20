@@ -7,7 +7,6 @@ import (
 	"time"
 
 	types "github.com/prysmaticlabs/eth2-types"
-	iface "github.com/prysmaticlabs/prysm/beacon-chain/state/interface"
 	"github.com/prysmaticlabs/prysm/proto/interfaces"
 )
 
@@ -28,7 +27,7 @@ const (
 	// NewHead of the chain event.
 	NewHead
 	// BlockVerified is sent when new block is validated by orchestrator
-	BlockVerified
+	EpochInfo
 )
 
 // BlockProcessedData is the data sent with BlockProcessed events.
@@ -64,9 +63,10 @@ type InitializedData struct {
 }
 
 // BlockPreVerifiedData is the data sent for orchestrator minimal consensus info
-type BlockPreVerifiedData struct {
+type EpochInfoData struct {
 	// Slot is the slot of the processed block.
 	Slot types.Slot
-	// CurrentState of the processed block.
-	CurrentState iface.BeaconState
+	//ProposerIndices of the current epoch
+	ProposerIndices []types.ValidatorIndex
+	PublicKeys      map[types.ValidatorIndex][48]byte
 }

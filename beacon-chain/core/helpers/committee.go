@@ -417,53 +417,41 @@ func precomputeProposerIndices(state iface.ReadOnlyBeaconState, activeIndices []
 	return proposerIndices, nil
 }
 
-// ProposerAssignments returns a map of proposer validator indices to corresponding slots for the next epoch.
+// ProposerIndicesInCache returns a map of proposer validator indices to corresponding slots for the next epoch.
 // This method is especially implemented for Orchestrator.
-func ProposerAssignments(
-	state iface.BeaconState,
-	epoch types.Epoch,
-) ([]*ethpb.ValidatorAssignments_CommitteeAssignment, error) {
-
+func ProposerIndicesInCache(state iface.BeaconState, epoch types.Epoch) ([]types.ValidatorIndex, map[types.ValidatorIndex][48]byte, error) {
 	nextEpoch := NextEpoch(state)
 	if epoch > nextEpoch {
-		return nil, fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"epoch %d can't be greater than next epoch %d",
 			epoch,
 			nextEpoch,
 		)
 	}
-
-	// We determine the slots in which proposers are supposed to act.
-	// Some validators may need to propose multiple times per epoch, so
-	// we use a map of proposer idx -> []slot to keep track of this possibility.
 	startSlot, err := StartSlot(epoch)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	proposerIndexToSlots := make(map[types.ValidatorIndex][]types.Slot, params.BeaconConfig().SlotsPerEpoch)
-	proposerAssignmentInfo := make([]*ethpb.ValidatorAssignments_CommitteeAssignment, 0)
-
-	// Proposal epochs do not have a look ahead, so we skip them over here.
-	//validProposalEpoch := epoch < nextEpoch
+	proposerIndices := make([]types.ValidatorIndex, params.BeaconConfig().SlotsPerEpoch)
+	pubKeyList := make(map[types.ValidatorIndex][48]byte, params.BeaconConfig().SlotsPerEpoch)
+	i := 0
 	for slot := startSlot; slot < startSlot+params.BeaconConfig().SlotsPerEpoch; slot++ {
 		// Skip proposer assignment for genesis slot.
 		if slot == 0 {
+			i++
 			continue
 		}
 		if err := state.SetSlot(slot); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		i, err := BeaconProposerIndex(state)
+		pi, err := BeaconProposerIndex(state)
 		if err != nil {
-			return nil, errors.Wrapf(err, "could not check proposer at slot %d", state.Slot())
+			return nil, nil, errors.Wrapf(err, "could not get proposer index at slot %d", state.Slot())
 		}
-		proposerIndexToSlots[i] = append(proposerIndexToSlots[i], slot)
-		pubKey := state.PubkeyAtIndex(i)
-		proposerAssignmentInfo = append(proposerAssignmentInfo, &ethpb.ValidatorAssignments_CommitteeAssignment{
-			ProposerSlots:  proposerIndexToSlots[i],
-			PublicKey:      pubKey[:],
-			ValidatorIndex: i,
-		})
+		pubKey := state.PubkeyAtIndex(pi)
+		proposerIndices[i] = pi
+		pubKeyList[pi] = pubKey
+		i++
 	}
-	return proposerAssignmentInfo, nil
+	return proposerIndices, pubKeyList, nil
 }
