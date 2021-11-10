@@ -30,7 +30,7 @@ func (bs *Server) StreamMinimalConsensusInfo(
 		return nil
 	}
 
-	batchSender := func(startEpoch, endEpoch types.Epoch) error {
+	batchSender := func(startEpoch, endEpoch types.Epoch, reorgInfo *ethpb.Reorg) error {
 		for epoch := startEpoch; epoch <= endEpoch; epoch++ {
 			startSlot, err := helpers.StartSlot(epoch)
 			if err != nil {
@@ -49,7 +49,7 @@ func (bs *Server) StreamMinimalConsensusInfo(
 			if err != nil {
 				return status.Errorf(codes.Internal, "Could not send epoch info for epoch %v over stream: %v", epoch, err)
 			}
-			epochInfo, err := bs.prepareEpochInfo(epoch, proposerIndices, pubKeys)
+			epochInfo, err := bs.prepareEpochInfo(epoch, proposerIndices, pubKeys, reorgInfo)
 			if err != nil {
 				return status.Errorf(codes.Internal, "Could not send epoch info for epoch %v over stream: %v", epoch, err)
 			}
@@ -66,12 +66,16 @@ func (bs *Server) StreamMinimalConsensusInfo(
 	}
 	startEpoch := req.FromEpoch
 	endEpoch := cp.Epoch
-	if startEpoch == 0 || startEpoch < endEpoch {
-		if err := batchSender(startEpoch, endEpoch); err != nil {
+	if startEpoch <= endEpoch {
+		if err := batchSender(startEpoch, endEpoch, nil); err != nil {
 			return err
 		}
-		log.WithField("startEpoch", startEpoch).WithField("endEpoch", endEpoch).
-			Debug("successfully published previous epoch infos")
+		log.WithField("requestedEpoch", req.FromEpoch).WithField("finalizedEpoch", cp.Epoch).
+			Debug("Successfully published previous epoch infos")
+	} else {
+		endEpoch = req.FromEpoch
+		log.WithField("requestedEpoch", req.FromEpoch).WithField("finalizedEpoch", cp.Epoch).
+			Debug("Requested epoch is greater than finalized epoch")
 	}
 
 	stateChannel := make(chan *feed.Event, 1)
@@ -90,23 +94,23 @@ func (bs *Server) StreamMinimalConsensusInfo(
 					return status.Errorf(codes.Internal, "Received incorrect data type over epoch info feed: %v", epochInfoData)
 				}
 				curEpoch := helpers.SlotToEpoch(epochInfoData.Slot)
-				nextEpoch := curEpoch+1
+				nextEpoch := curEpoch + 1
 				// Executes for once. It sends leftover epochs to orchestrator.
 				// Leftover epoch will start from endEpoch+1 to current epoch
 				if firstTime {
+					firstTime = false
 					if endEpoch < curEpoch {
-						if err := batchSender(endEpoch+1, curEpoch); err != nil {
+						if err := batchSender(endEpoch+1, curEpoch, nil); err != nil {
 							return err
 						}
 						log.WithField("startEpoch", endEpoch+1).WithField("endEpoch", curEpoch).
 							Debug("successfully published left over epoch infos")
 					}
-					firstTime = false
 					log.WithField("liveSyncEpoch", nextEpoch).Debug("start publishing live epoch info")
 				}
 				// only first time, sends current epoch. then every time it sends next epoch info. if current epoch is n then
 				// it will send epoch info for n+1
-				epochInfo, err := bs.prepareEpochInfo(nextEpoch, epochInfoData.ProposerIndices, epochInfoData.PublicKeys)
+				epochInfo, err := bs.prepareEpochInfo(nextEpoch, epochInfoData.ProposerIndices, epochInfoData.PublicKeys, nil)
 				if err != nil {
 					return status.Errorf(codes.Internal, "Could not send over stream: %v", err)
 				}
@@ -123,7 +127,15 @@ func (bs *Server) StreamMinimalConsensusInfo(
 				}
 				log.WithField("newSlot", data.Slot).WithField("newEpoch", data.Epoch).
 					Debug("Encountered a reorg. Re-sending updated epoch info")
-				if err := batchSender(data.Epoch, data.Epoch); err != nil {
+
+				// Get re-org info from DB
+				reorgInfo, err := bs.prepareReorgInfo(data)
+				if err != nil {
+					log.WithError(err).Error("Failed re-org handling")
+					return err
+				}
+
+				if err := batchSender(data.Epoch, data.Epoch, reorgInfo); err != nil {
 					return err
 				}
 				log.WithField("startEpoch", startEpoch).WithField("endEpoch", endEpoch).
@@ -144,6 +156,7 @@ func (bs *Server) prepareEpochInfo(
 	epoch types.Epoch,
 	proposerIndices []types.ValidatorIndex,
 	pubKeys map[types.ValidatorIndex][48]byte,
+	reorgInfo *ethpb.Reorg,
 ) (*ethpb.MinimalConsensusInfo, error) {
 	startSlot, err := helpers.StartSlot(epoch)
 	if err != nil {
@@ -174,5 +187,39 @@ func (bs *Server) prepareEpochInfo(
 		ValidatorList:    publicKeyList,
 		EpochTimeStart:   uint64(epochStartTime.Unix()),
 		SlotTimeDuration: &duration.Duration{Seconds: int64(params.BeaconConfig().SecondsPerSlot)},
+		ReorgInfo:        reorgInfo,
+	}, nil
+}
+
+// getVanPanParentHash prepares re-org info for pandora and orchestrator
+func (bs *Server) prepareReorgInfo(reorgInfo *ethpbv1.EventChainReorg) (*ethpb.Reorg, error) {
+	var newHeadRoot32Bytes [32]byte
+	copy(newHeadRoot32Bytes[:], reorgInfo.NewHeadBlock)
+	// Get the new head block from DB.
+	newHeadBlock, err := bs.BeaconDB.Block(bs.Ctx, newHeadRoot32Bytes)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"Could not send over stream: failed to retrieve re-org new block from db with slot %v", reorgInfo.Slot)
+	}
+	// Get the parent block of new head block from DB
+	vanParentBlockHash := newHeadBlock.Block().ParentRoot()
+	var parentBlockHash32Bytes [32]byte
+	copy(parentBlockHash32Bytes[:], vanParentBlockHash)
+	vanParentBlock, err := bs.BeaconDB.Block(bs.Ctx, parentBlockHash32Bytes)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"Could not send over stream: failed to retrieve re-org parent block from db with slot %v", reorgInfo.Slot)
+	}
+	// Get the pandora shard header hash of parent vanguard block from DB
+	panShards := vanParentBlock.Block().Body().PandoraShards()
+	if len(panShards) == 0 {
+		return nil, status.Errorf(codes.Internal,
+			"Could not send over stream: invalid re-org pandora shard length %v", reorgInfo.Slot)
+	}
+	panHeaderHash := panShards[0].Hash
+	return &ethpb.Reorg{
+		VanParentHash: vanParentBlockHash,
+		PanParentHash: panHeaderHash,
+		NewSlot:       reorgInfo.Slot,
 	}, nil
 }
