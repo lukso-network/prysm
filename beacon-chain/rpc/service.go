@@ -390,6 +390,9 @@ func (s *Service) logNewClientConnection(ctx context.Context) {
 // It can be HTTP/S layer or IPC socket, tcp or unix socket.
 func (s *Service) prepareRpcAddressAndProtocol() (address string, protocol string, err error) {
 	address = fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
+	if net.ParseIP(address) == nil {
+		return address, "tcp", nil
+	}
 	u, err := url.Parse(address)
 	if err != nil {
 		return
