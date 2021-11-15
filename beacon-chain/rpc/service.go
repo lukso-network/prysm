@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 	"sync"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -389,19 +390,36 @@ func (s *Service) logNewClientConnection(ctx context.Context) {
 // prepareRpcAddressAndProtocol returns a RPC address and protocol.
 // It can be HTTP/S layer or IPC socket, tcp or unix socket.
 func (s *Service) prepareRpcAddressAndProtocol() (address string, protocol string, err error) {
+	var host string
+
 	address = fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
-	if net.ParseIP(address) == nil {
-		return address, "tcp", nil
+	if strings.Contains(address, ".ipc") {
+		address = s.cfg.Host
 	}
+
 	u, err := url.Parse(address)
 	if err != nil {
-		return
+		host, _, err = net.SplitHostPort(address)
+		if err != nil {
+			return address, "", err
+		}
 	}
+	if u != nil {
+		host = u.Host
+	}
+
+	if net.ParseIP(host) != nil {
+		return address, "tcp", nil
+	}
+
 	switch u.Scheme {
 	case "http", "https":
 		return address, "tcp", nil
 	case "":
-		return s.cfg.Host, "unix", nil
+		if len(strings.TrimSpace(u.Path)) == 0 {
+			return address, "", fmt.Errorf("invalid socket path %q", u.Path)
+		}
+		return address, "unix", nil
 	default:
 		return address, protocol, fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
 	}
