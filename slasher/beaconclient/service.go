@@ -7,6 +7,8 @@ package beaconclient
 
 import (
 	"context"
+	"net"
+	"time"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -145,6 +147,11 @@ func (s *Service) Start() {
 			"You are using an insecure gRPC connection to beacon chain! Please provide a certificate and key to use a secure connection",
 		)
 	}
+
+	dialer := func(addr string, t time.Duration) (net.Conn, error) {
+		return net.Dial("unix", addr)
+	}
+
 	beaconOpts := []grpc.DialOption{
 		dialOpt,
 		grpc.WithStatsHandler(&ocgrpc.ClientHandler{}),
@@ -160,6 +167,8 @@ func (s *Service) Start() {
 			grpc_retry.UnaryClientInterceptor(),
 			grpcutils.LogRequests,
 		)),
+		grpc.WithInsecure(),
+		grpc.WithDialer(dialer),
 	}
 	conn, err := grpc.DialContext(s.ctx, s.cfg.BeaconProvider, beaconOpts...)
 	if err != nil {
