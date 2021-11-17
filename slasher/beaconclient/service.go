@@ -149,13 +149,9 @@ func (s *Service) Start() {
 		)
 	}
 
-	rpcAddress, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.BeaconProvider, "")
-	if nil != err {
-		return nil, err
-	}
-
-	dialer := func(addr string, t time.Duration) (net.Conn, error) {
-		return net.Dial("unix", addr)
+	beaconRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.BeaconProvider, "")
+	if err != nil {
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in Start() %s: %v", beaconRpcAddr, err)
 	}
 
 	beaconOpts := []grpc.DialOption{
@@ -173,12 +169,20 @@ func (s *Service) Start() {
 			grpc_retry.UnaryClientInterceptor(),
 			grpcutils.LogRequests,
 		)),
-		grpc.WithInsecure(),
-		grpc.WithDialer(dialer),
 	}
-	conn, err := grpc.DialContext(s.ctx, s.cfg.BeaconProvider, beaconOpts...)
+
+	if "unix" == protocol {
+		dialer := func(addr string, t time.Duration) (net.Conn, error) {
+			return net.Dial(protocol, addr)
+		}
+
+		beaconOpts = append(beaconOpts, grpc.WithDialer(dialer))
+		beaconOpts = append(beaconOpts, grpc.WithInsecure())
+	}
+
+	conn, err := grpc.DialContext(s.ctx, beaconRpcAddr, beaconOpts...)
 	if err != nil {
-		log.Fatalf("Could not dial endpoint: %s, %v", s.cfg.BeaconProvider, err)
+		log.Fatalf("Could not dial endpoint: %s, %v", beaconRpcAddr, err)
 	}
 	s.beaconDialOptions = beaconOpts
 	log.Info("Successfully started gRPC connection")

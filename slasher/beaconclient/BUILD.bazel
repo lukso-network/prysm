@@ -21,6 +21,7 @@ go_library(
         "//shared/event:go_default_library",
         "//shared/grpcutils:go_default_library",
         "//shared/params:go_default_library",
+        "//shared/rpcutil:go_default_library",
         "//shared/sliceutil:go_default_library",
         "//shared/slotutil:go_default_library",
         "//slasher/cache:go_default_library",

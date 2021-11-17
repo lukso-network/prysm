@@ -5,17 +5,12 @@ package rpc
 
 import (
 	"context"
-	"fmt"
-	"github.com/prysmaticlabs/prysm/shared/rpcutil"
-	"net"
-	"net/url"
-	"strings"
-
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	slashpb "github.com/prysmaticlabs/prysm/proto/slashing"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"github.com/prysmaticlabs/prysm/shared/traceutil"
 	"github.com/prysmaticlabs/prysm/slasher/beaconclient"
 	"github.com/prysmaticlabs/prysm/slasher/db"
@@ -24,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
+	"net"
 )
 
 // Service defines a server implementation of the gRPC Slasher service,
@@ -61,9 +57,9 @@ func NewService(ctx context.Context, cfg *Config) *Service {
 
 // Start the gRPC service.
 func (s *Service) Start() {
-	beaconRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(cliCtx.String(flags.BeaconRPCProviderFlag.Name), "")
+	address, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.Host, s.cfg.Port)
 	if err != nil {
-		log.Errorf("Could not ResolveRpcAddressAndProtocol in Start() %s: %v", beaconRpcAddr, err)
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in Start() %s: %v", address, err)
 	}
 
 	lis, err := net.Listen(protocol, address)
