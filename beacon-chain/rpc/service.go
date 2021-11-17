@@ -5,10 +5,8 @@ package rpc
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"net"
-	"net/url"
-	"strings"
 	"sync"
 
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -137,9 +135,9 @@ func NewService(ctx context.Context, cfg *Config) *Service {
 
 // Start the gRPC server.
 func (s *Service) Start() {
-	address, protocol, err := s.prepareRpcAddressAndProtocol()
+	address, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.Host, s.cfg.Port)
 	if err != nil {
-		log.Errorf("Could not prepare proper address and protocol for net.Listen in Start() %s %s: %v", address, protocol, err)
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in Start() %s: %v", address, err)
 	}
 
 	lis, err := net.Listen(protocol, address)
@@ -384,43 +382,5 @@ func (s *Service) logNewClientConnection(ctx context.Context) {
 			}).Infof("New gRPC client connected to beacon node")
 			s.connectedRPCClients[clientInfo.Addr] = true
 		}
-	}
-}
-
-// prepareRpcAddressAndProtocol returns a RPC address and protocol.
-// It can be HTTP/S layer or IPC socket, tcp or unix socket.
-func (s *Service) prepareRpcAddressAndProtocol() (address string, protocol string, err error) {
-	var host string
-
-	address = fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
-	if strings.Contains(address, ".ipc") {
-		address = s.cfg.Host
-	}
-
-	u, err := url.Parse(address)
-	if err != nil {
-		host, _, err = net.SplitHostPort(address)
-		if err != nil {
-			return address, "", err
-		}
-	}
-	if u != nil {
-		host = u.Host
-	}
-
-	if net.ParseIP(host) != nil {
-		return address, "tcp", nil
-	}
-
-	switch u.Scheme {
-	case "http", "https":
-		return address, "tcp", nil
-	case "":
-		if len(strings.TrimSpace(u.Path)) == 0 {
-			return address, "", fmt.Errorf("invalid socket path %q", u.Path)
-		}
-		return address, "unix", nil
-	default:
-		return address, protocol, fmt.Errorf("no known transport for URL scheme %q", u.Scheme)
 	}
 }
