@@ -30,6 +30,7 @@ go_library(
         "//shared/petnames:go_default_library",
         "//shared/promptutil:go_default_library",
         "//shared/rand:go_default_library",
+        "//shared/rpcutil:go_default_library",
         "//shared/timeutils:go_default_library",
         "//shared/traceutil:go_default_library",
         "//shared/version:go_default_library",

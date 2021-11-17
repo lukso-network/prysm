@@ -16,7 +16,7 @@ var (
 	BeaconRPCProviderFlag = &cli.StringFlag{
 		Name:  "beacon-rpc-provider",
 		Usage: "Beacon node RPC provider endpoint",
-		Value: "localhost:4000",
+		Value: "127.0.0.1:4000",
 	}
 	// CertFlag defines a flag for the node's TLS certificate.
 	CertFlag = &cli.StringFlag{

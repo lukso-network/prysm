@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"net"
 	"strings"
 	"time"
@@ -77,8 +78,9 @@ func (s *Service) startSlasherClient() ethsl.SlasherClient {
 
 	s.ctx = grpcutils.AppendHeaders(s.ctx, s.grpcHeaders)
 
-	dialer := func(addr string, t time.Duration) (net.Conn, error) {
-		return net.Dial("unix", addr)
+	slasherRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.Endpoint, "")
+	if err != nil {
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in startSlasherClient() %s: %v", slasherRpcAddr, err)
 	}
 
 	opts := []grpc.DialOption{
@@ -99,12 +101,20 @@ func (s *Service) startSlasherClient() ethsl.SlasherClient {
 			grpc_retry.UnaryClientInterceptor(),
 			grpcutils.LogRequests,
 		)),
-		grpc.WithInsecure(),
-		grpc.WithDialer(dialer),
 	}
-	conn, err := grpc.DialContext(s.ctx, s.cfg.Endpoint, opts...)
+
+	if "unix" == protocol {
+		dialer := func(addr string, t time.Duration) (net.Conn, error) {
+			return net.Dial(protocol, addr)
+		}
+
+		opts = append(opts, grpc.WithDialer(dialer))
+		opts = append(opts, grpc.WithInsecure())
+	}
+
+	conn, err := grpc.DialContext(s.ctx, slasherRpcAddr, opts...)
 	if err != nil {
-		log.Errorf("Could not dial slasher endpoint: %s, %v", s.cfg.Endpoint, err)
+		log.Errorf("Could not dial slasher endpoint: %s, %v", slasherRpcAddr, err)
 		return nil
 	}
 	log.Debug("Successfully started slasher gRPC connection")

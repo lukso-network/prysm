@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"io"
 	"net"
 	"strings"
@@ -38,7 +39,6 @@ type PerformExitCfg struct {
 }
 
 const (
-	protocol       = "unix"
 	exitPassphrase = "Exit my validator"
 )
 
@@ -233,8 +233,9 @@ func prepareAllKeys(validatingKeys [][48]byte) (raw [][]byte, formatted []string
 }
 
 func prepareClients(cliCtx *cli.Context) (*ethpb.BeaconNodeValidatorClient, *ethpb.NodeClient, error) {
-	dialer := func(addr string, t time.Duration) (net.Conn, error) {
-		return net.Dial(protocol, addr)
+	beaconRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(cliCtx.String(flags.BeaconRPCProviderFlag.Name), "")
+	if err != nil {
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in prepareClients() %s: %v", beaconRpcAddr, err)
 	}
 
 	dialOpts := client.ConstructDialOptions(
@@ -242,19 +243,26 @@ func prepareClients(cliCtx *cli.Context) (*ethpb.BeaconNodeValidatorClient, *eth
 		cliCtx.String(flags.CertFlag.Name),
 		cliCtx.Uint(flags.GrpcRetriesFlag.Name),
 		cliCtx.Duration(flags.GrpcRetryDelayFlag.Name),
-		grpc.WithInsecure(),
-		grpc.WithDialer(dialer),
 	)
 	if dialOpts == nil {
 		return nil, nil, errors.New("failed to construct dial options")
 	}
 
+	if "unix" == protocol {
+		dialer := func(addr string, t time.Duration) (net.Conn, error) {
+			return net.Dial(protocol, addr)
+		}
+
+		dialOpts = append(dialOpts, grpc.WithDialer(dialer))
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	}
+
 	grpcHeaders := strings.Split(cliCtx.String(flags.GrpcHeadersFlag.Name), ",")
 	cliCtx.Context = grpcutils.AppendHeaders(cliCtx.Context, grpcHeaders)
 
-	conn, err := grpc.DialContext(cliCtx.Context, cliCtx.String(flags.BeaconRPCProviderFlag.Name), dialOpts...)
+	conn, err := grpc.DialContext(cliCtx.Context, beaconRpcAddr, dialOpts...)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "could not dial endpoint %s", flags.BeaconRPCProviderFlag.Name)
+		return nil, nil, errors.Wrapf(err, "could not dial endpoint %s", beaconRpcAddr)
 	}
 	validatorClient := ethpb.NewBeaconNodeValidatorClient(conn)
 	nodeClient := ethpb.NewNodeClient(conn)

@@ -7,6 +7,7 @@ package beaconclient
 
 import (
 	"context"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"net"
 	"time"
 
@@ -146,6 +147,11 @@ func (s *Service) Start() {
 		log.Warn(
 			"You are using an insecure gRPC connection to beacon chain! Please provide a certificate and key to use a secure connection",
 		)
+	}
+
+	rpcAddress, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.cfg.BeaconProvider, "")
+	if nil != err {
+		return nil, err
 	}
 
 	dialer := func(addr string, t time.Duration) (net.Conn, error) {

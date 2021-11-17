@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"net"
 	"strings"
 	"time"
@@ -133,26 +134,35 @@ func NewValidatorService(ctx context.Context, cfg *Config) (*ValidatorService, e
 // Start the validator service. Launches the main go routine for the validator
 // client.
 func (v *ValidatorService) Start() {
-	dialer := func(addr string, t time.Duration) (net.Conn, error) {
-		return net.Dial("unix", addr)
+	beaconRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(v.endpoint, "")
+	if err != nil {
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in Start() %s: %v", beaconRpcAddr, err)
 	}
+
 	dialOpts := ConstructDialOptions(
 		v.maxCallRecvMsgSize,
 		v.withCert,
 		v.grpcRetries,
 		v.grpcRetryDelay,
-		grpc.WithInsecure(),
-		grpc.WithDialer(dialer),
 	)
 	if dialOpts == nil {
 		return
 	}
 
+	if "unix" == protocol {
+		dialer := func(addr string, t time.Duration) (net.Conn, error) {
+			return net.Dial(protocol, addr)
+		}
+
+		dialOpts = append(dialOpts, grpc.WithDialer(dialer))
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	}
+
 	v.ctx = grpcutils.AppendHeaders(v.ctx, v.grpcHeaders)
 
-	conn, err := grpc.DialContext(v.ctx, v.endpoint, dialOpts...)
+	conn, err := grpc.DialContext(v.ctx, beaconRpcAddr, dialOpts...)
 	if err != nil {
-		log.Errorf("Could not dial endpoint: %s, %v", v.endpoint, err)
+		log.Errorf("Could not dial endpoint: %s, %v", beaconRpcAddr, err)
 		return
 	}
 	if v.withCert != "" {

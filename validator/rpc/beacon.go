@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"github.com/prysmaticlabs/prysm/shared/rpcutil"
 	"net"
 	"time"
 
@@ -20,10 +21,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-const (
-	protocol = "unix"
-)
-
 // Initialize a client connect to a beacon node gRPC endpoint.
 func (s *Server) registerBeaconClient() error {
 	streamInterceptor := grpc.WithStreamInterceptor(middleware.ChainStreamClient(
@@ -31,27 +28,38 @@ func (s *Server) registerBeaconClient() error {
 		grpc_prometheus.StreamClientInterceptor,
 		grpc_retry.StreamClientInterceptor(),
 	))
-	dialer := func(addr string, t time.Duration) (net.Conn, error) {
-		return net.Dial(protocol, addr)
+
+	beaconRpcAddr, protocol, err := rpcutil.ResolveRpcAddressAndProtocol(s.beaconClientEndpoint, "")
+	if err != nil {
+		log.Errorf("Could not ResolveRpcAddressAndProtocol in registerBeaconClient() %s: %v", beaconRpcAddr, err)
 	}
+
 	dialOpts := client.ConstructDialOptions(
 		s.clientMaxCallRecvMsgSize,
 		s.clientWithCert,
 		s.clientGrpcRetries,
 		s.clientGrpcRetryDelay,
 		streamInterceptor,
-		grpc.WithInsecure(),
-		grpc.WithDialer(dialer),
 	)
+
 	if dialOpts == nil {
 		return errors.New("no dial options for beacon chain gRPC client")
 	}
 
+	if "unix" == protocol {
+		dialer := func(addr string, t time.Duration) (net.Conn, error) {
+			return net.Dial(protocol, addr)
+		}
+
+		dialOpts = append(dialOpts, grpc.WithDialer(dialer))
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	}
+
 	s.ctx = grpcutils.AppendHeaders(s.ctx, s.clientGrpcHeaders)
 
-	conn, err := grpc.DialContext(s.ctx, s.beaconClientEndpoint, dialOpts...)
+	conn, err := grpc.DialContext(s.ctx, beaconRpcAddr, dialOpts...)
 	if err != nil {
-		return errors.Wrapf(err, "could not dial endpoint: %s", s.beaconClientEndpoint)
+		return errors.Wrapf(err, "could not dial endpoint: %s", beaconRpcAddr)
 	}
 	if s.clientWithCert != "" {
 		log.Info("Established secure gRPC connection")
