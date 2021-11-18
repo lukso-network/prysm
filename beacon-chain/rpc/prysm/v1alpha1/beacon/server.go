@@ -47,4 +47,6 @@ type Server struct {
 	CollectedAttestationsBuffer chan []*ethpb.Attestation
 	StateGen                    stategen.StateManager
 	SyncChecker                 sync.Checker
+	// Vanguard: pending blocks cache
+	PendingQueueFetcher blockchain.PendingQueueFetcher
 }

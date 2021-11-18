@@ -30,11 +30,12 @@ func TestServer_StreamMinimalConsensusInfo_ContextCanceled(t *testing.T) {
 	chainService := &mockChain.ChainService{}
 	ctx, cancel := context.WithCancel(ctx)
 	server := &Server{
-		Ctx:           ctx,
-		StateNotifier: chainService.StateNotifier(),
-		HeadFetcher:   chainService,
-		BeaconDB:      db,
-		StateGen:      stategen.New(db),
+		Ctx:                 ctx,
+		StateNotifier:       chainService.StateNotifier(),
+		HeadFetcher:         chainService,
+		BeaconDB:            db,
+		StateGen:            stategen.New(db),
+		PendingQueueFetcher: chainService,
 	}
 
 	exitRoutine := make(chan bool)
@@ -76,12 +77,13 @@ func TestServer_StreamMinimalConsensusInfo_PreviousEpochInfos(t *testing.T) {
 	chainService := &mockChain.ChainService{}
 	ctx, cancel := context.WithCancel(ctx)
 	server := &Server{
-		Ctx:                ctx,
-		StateNotifier:      chainService.StateNotifier(),
-		HeadFetcher:        chainService,
-		BeaconDB:           db,
-		StateGen:           stategen.New(db),
-		GenesisTimeFetcher: c,
+		Ctx:                 ctx,
+		StateNotifier:       chainService.StateNotifier(),
+		HeadFetcher:         chainService,
+		BeaconDB:            db,
+		StateGen:            stategen.New(db),
+		GenesisTimeFetcher:  c,
+		PendingQueueFetcher: chainService,
 	}
 	exitRoutine := make(chan bool)
 	ctrl := gomock.NewController(t)
@@ -124,12 +126,13 @@ func TestServer_StreamMinimalConsensusInfo_PublishCurEpochInfo(t *testing.T) {
 	chainService := &mockChain.ChainService{}
 	ctx, cancel := context.WithCancel(ctx)
 	server := &Server{
-		Ctx:                ctx,
-		StateNotifier:      chainService.StateNotifier(),
-		HeadFetcher:        chainService,
-		BeaconDB:           db,
-		StateGen:           stategen.New(db),
-		GenesisTimeFetcher: c,
+		Ctx:                 ctx,
+		StateNotifier:       chainService.StateNotifier(),
+		HeadFetcher:         chainService,
+		BeaconDB:            db,
+		StateGen:            stategen.New(db),
+		GenesisTimeFetcher:  c,
+		PendingQueueFetcher: chainService,
 	}
 
 	// retrieve proposer
@@ -192,12 +195,13 @@ func TestServer_StreamMinimalConsensusInfo_ChainReorg(t *testing.T) {
 	chainService := &mockChain.ChainService{}
 	ctx, cancel := context.WithCancel(ctx)
 	server := &Server{
-		Ctx:                ctx,
-		StateNotifier:      chainService.StateNotifier(),
-		HeadFetcher:        chainService,
-		BeaconDB:           db,
-		StateGen:           stategen.New(db),
-		GenesisTimeFetcher: c,
+		Ctx:                 ctx,
+		StateNotifier:       chainService.StateNotifier(),
+		HeadFetcher:         chainService,
+		BeaconDB:            db,
+		StateGen:            stategen.New(db),
+		GenesisTimeFetcher:  c,
+		PendingQueueFetcher: chainService,
 	}
 	exitRoutine := make(chan bool)
 	ctrl := gomock.NewController(t)

@@ -794,7 +794,7 @@ func (mr *MockBeaconChain_StreamNewPendingBlocksServerMockRecorder) RecvMsg(arg0
 }
 
 // Send mocks base method
-func (m *MockBeaconChain_StreamNewPendingBlocksServer) Send(arg0 *eth.BeaconBlock) error {
+func (m *MockBeaconChain_StreamNewPendingBlocksServer) Send(arg0 *eth.StreamPendingBlockInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Send", arg0)
 	ret0, _ := ret[0].(error)

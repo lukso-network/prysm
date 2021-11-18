@@ -140,6 +140,9 @@ func (bs *Server) StreamMinimalConsensusInfo(
 				}
 				log.WithField("startEpoch", startEpoch).WithField("endEpoch", endEpoch).
 					Info("Published reorg epoch infos")
+
+				// Stop orchestrator verification
+				bs.PendingQueueFetcher.DeactivateOrcVerification()
 			}
 		case <-stateSub.Err():
 			return status.Error(codes.Aborted, "Subscriber closed, exiting go routine")
