@@ -226,27 +226,27 @@ func (s *Service) verifyPandoraShardInfo(signedBlk interfaces.SignedBeaconBlock)
 	}
 	// Checking length of current block's pandora shard info
 	curPandoraShards := signedBlk.Block().Body().PandoraShards()
-	if len(curPandoraShards) == 0 {
-		return errInvalidPandoraShardInfoLength
-	}
-	// Checking current block pandora shard's parent with canonical head's pandora shard's header hash
-	canonicalHeadBlock := s.head.block
-	if canonicalHeadBlock != nil && len(canonicalHeadBlock.Block().Body().PandoraShards()) > 0 {
-		parentPandoraShards := canonicalHeadBlock.Block().Body().PandoraShards()
-		canonicalShardingHash := common.BytesToHash(parentPandoraShards[0].Hash)
-		canonicalShardingBlkNum := parentPandoraShards[0].BlockNumber
+	if len(curPandoraShards) > 0 {
+		// Checking current block pandora shard's parent with canonical head's pandora shard's header hash
+		canonicalHeadBlock := s.head.block
+		if canonicalHeadBlock != nil && len(canonicalHeadBlock.Block().Body().PandoraShards()) > 0 {
+			parentPandoraShards := canonicalHeadBlock.Block().Body().PandoraShards()
+			canonicalShardingHash := common.BytesToHash(parentPandoraShards[0].Hash)
+			canonicalShardingBlkNum := parentPandoraShards[0].BlockNumber
 
-		curShardingParentHash := common.BytesToHash(curPandoraShards[0].ParentHash)
-		curShardingBlockNumber := curPandoraShards[0].BlockNumber
-		commonLog := log.WithField("slot", signedBlk.Block().Slot()).WithField("canonicalShardingHash", canonicalShardingHash).
-			WithField("canonicalShardingBlkNum", canonicalShardingBlkNum).WithField("curShardingParentHash", curShardingParentHash).
-			WithField("curShardingBlockNumber", curShardingBlockNumber)
+			curShardingParentHash := common.BytesToHash(curPandoraShards[0].ParentHash)
+			curShardingBlockNumber := curPandoraShards[0].BlockNumber
+			commonLog := log.WithField("slot", signedBlk.Block().Slot()).WithField("canonicalShardingHash", canonicalShardingHash).
+				WithField("canonicalShardingBlkNum", canonicalShardingBlkNum).WithField("curShardingParentHash", curShardingParentHash).
+				WithField("curShardingBlockNumber", curShardingBlockNumber)
 
-		if curShardingParentHash != canonicalShardingHash && curShardingBlockNumber != canonicalShardingBlkNum+1 {
-			commonLog.WithError(errInvalidPandoraShardInfo).Error("Failed to verify pandora sharding info")
-			return errInvalidPandoraShardInfo
+			if curShardingParentHash != canonicalShardingHash && curShardingBlockNumber != canonicalShardingBlkNum+1 {
+				commonLog.WithError(errInvalidPandoraShardInfo).Error("Failed to verify pandora sharding info")
+				return errInvalidPandoraShardInfo
+			}
+			commonLog.Debug("Successfully verified pandora sharding info")
 		}
-		commonLog.Debug("Successfully verified pandora sharding info")
 	}
+
 	return nil
 }

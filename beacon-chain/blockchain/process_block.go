@@ -115,17 +115,23 @@ func (s *Service) onBlock(ctx context.Context, signed interfaces.SignedBeaconBlo
 			s.publishEpochInfo(signed.Block().Slot(), proposerIndices, pubKeys)
 			s.setLatestSentEpoch(nextEpoch)
 		}
-		// publish block to orchestrator and rpc service for sending minimal consensus info
-		s.publishBlock(signed)
-		if s.orcVerification {
+
+		if s.OrcVerification() {
 			// verify pandora sharding info in live sync mode
 			if err := s.verifyPandoraShardInfo(signed); err != nil {
 				return errors.Wrap(err, "could not verify pandora shard info onBlock")
 			}
+
+			// publish block to orchestrator and rpc service for sending minimal consensus info
+			s.publishBlock(signed)
+
 			// waiting for orchestrator confirmation in live-sync mode
 			if err := s.waitForConfirmation(signed); err != nil {
 				return errors.Wrap(err, "could not publish and verified by orchestrator client onBlock")
 			}
+		} else {
+			// publish block to orchestrator and rpc service for sending minimal consensus info
+			s.publishBlock(signed)
 		}
 	}
 
