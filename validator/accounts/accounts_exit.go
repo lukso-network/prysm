@@ -38,9 +38,7 @@ type PerformExitCfg struct {
 	FormattedPubKeys []string
 }
 
-const (
-	exitPassphrase = "Exit my validator"
-)
+const exitPassphrase = "Exit my validator"
 
 // ExitAccountsCli performs a voluntary exit on one or more accounts.
 func ExitAccountsCli(cliCtx *cli.Context, r io.Reader) error {

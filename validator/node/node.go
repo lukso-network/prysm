@@ -254,6 +254,11 @@ func (c *ValidatorClient) initializeFromCLI(cliCtx *cli.Context) error {
 			return err
 		}
 	}
+
+	if err := c.registerPandoraService(cliCtx); err != nil {
+		return err
+	}
+
 	if err := c.registerValidatorService(keyManager); err != nil {
 		return err
 	}
@@ -342,6 +347,9 @@ func (c *ValidatorClient) initializeForWeb(cliCtx *cli.Context) error {
 		if err := c.registerSlasherService(); err != nil {
 			return err
 		}
+	}
+	if err := c.registerPandoraService(cliCtx); err != nil {
+		return err
 	}
 	if err := c.registerValidatorService(keyManager); err != nil {
 		return err
