@@ -221,13 +221,13 @@ func (s *Service) waitForConfirmation(b interfaces.SignedBeaconBlock) error {
 }
 
 // verifyPandoraShardInfo
-func (s *Service) verifyPandoraShardInfo(parentBlk, curdBlk interfaces.SignedBeaconBlock) error {
+func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeaconBlock) error {
 	// For slot #1, we don't have shard info for previous block so short circuit here
-	if curdBlk.Block().Slot() == 1 {
+	if curBlk.Block().Slot() == 1 {
 		return nil
 	}
 	// Checking length of current block's pandora shard info
-	curPanShards := curdBlk.Block().Body().PandoraShards()
+	curPanShards := curBlk.Block().Body().PandoraShards()
 	parentPanShards := parentBlk.Block().Body().PandoraShards()
 
 	if len(curPanShards) > 0 && len(parentPanShards) > 0 {
@@ -237,7 +237,7 @@ func (s *Service) verifyPandoraShardInfo(parentBlk, curdBlk interfaces.SignedBea
 
 		curShardingParentHash := common.BytesToHash(curPanShards[0].ParentHash)
 		curShardingBlockNumber := curPanShards[0].BlockNumber
-		commonLog := log.WithField("slot", curdBlk.Block().Slot()).WithField("canonicalShardingHash", canonicalShardingHash).
+		commonLog := log.WithField("slot", curBlk.Block().Slot()).WithField("canonicalShardingHash", canonicalShardingHash).
 			WithField("canonicalShardingBlkNum", canonicalShardingBlkNum).WithField("curShardingParentHash", curShardingParentHash).
 			WithField("curShardingBlockNumber", curShardingBlockNumber)
 
