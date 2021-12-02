@@ -8,6 +8,7 @@ import (
 	"github.com/prysmaticlabs/prysm/beacon-chain/core/feed"
 	blockfeed "github.com/prysmaticlabs/prysm/beacon-chain/core/feed/block"
 	statefeed "github.com/prysmaticlabs/prysm/beacon-chain/core/feed/state"
+	ethpb "github.com/prysmaticlabs/prysm/proto/eth/v1alpha1"
 	"github.com/prysmaticlabs/prysm/proto/interfaces"
 	vanTypes "github.com/prysmaticlabs/prysm/shared/params"
 	"time"
@@ -222,13 +223,20 @@ func (s *Service) waitForConfirmation(b interfaces.SignedBeaconBlock) error {
 
 // verifyPandoraShardInfo
 func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeaconBlock) error {
+	var parentPanShards []*ethpb.PandoraShard
+
 	// For slot #1, we don't have shard info for previous block so short circuit here
 	if curBlk.Block().Slot() == 1 {
 		return nil
 	}
 	// Checking length of current block's pandora shard info
 	curPanShards := curBlk.Block().Body().PandoraShards()
-	parentPanShards := parentBlk.Block().Body().PandoraShards()
+
+	if parentBlk == nil || len(parentBlk.Block().Body().PandoraShards()) == 0 {
+		return nil
+	}
+
+	parentPanShards = parentBlk.Block().Body().PandoraShards()
 
 	if len(curPanShards) > 0 && len(parentPanShards) > 0 {
 		// Checking current block pandora shard's parent with canonical head's pandora shard's header hash
