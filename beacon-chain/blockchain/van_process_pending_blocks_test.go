@@ -11,6 +11,7 @@ import (
 	"github.com/prysmaticlabs/prysm/beacon-chain/state/stategen"
 	"github.com/prysmaticlabs/prysm/proto/eth/v1alpha1/wrapper"
 	"github.com/prysmaticlabs/prysm/proto/interfaces"
+	"github.com/prysmaticlabs/prysm/shared/bytesutil"
 	vanTypes "github.com/prysmaticlabs/prysm/shared/params"
 	"github.com/prysmaticlabs/prysm/shared/testutil"
 	"github.com/prysmaticlabs/prysm/shared/testutil/assert"
@@ -181,6 +182,35 @@ func TestService_WaitForConfirmation_VerifiedStatus_AfterFewPendingStatus(t *tes
 		exitRoutine <- true
 	}(t)
 	<-exitRoutine
+}
+
+func TestService_PandoraShardInfo(t *testing.T) {
+	ctx := context.Background()
+	beaconDB := testDB.SetupDB(t)
+	cfg := &Config{
+		BeaconDB:      beaconDB,
+		StateGen:      stategen.New(beaconDB),
+		BlockNotifier: &mock.MockBlockNotifier{RecordEvents: true},
+		StateNotifier: &mock.MockStateNotifier{RecordEvents: true},
+	}
+	s, err := NewService(ctx, cfg)
+	require.NoError(t, err)
+	genesisStateRoot := [32]byte{}
+	genesis := blocks.NewGenesisBlock(genesisStateRoot[:])
+	wrappedGenesisBlk := wrapper.WrappedPhase0SignedBeaconBlock(genesis)
+	assert.NoError(t, beaconDB.SaveBlock(ctx, wrappedGenesisBlk))
+	require.NoError(t, err)
+	wrappedBlk := wrapper.WrappedPhase0SignedBeaconBlock(testutil.NewBeaconBlock())
+	b := wrappedBlk.Block()
+	parentRoot := bytesutil.ToBytes32(b.ParentRoot())
+	parentBlk, err := s.cfg.BeaconDB.Block(s.ctx, parentRoot)
+	require.NoError(t, err)
+	err = s.verifyPandoraShardInfo(parentBlk, wrappedBlk)
+	require.NoError(t, err)
+	time.Sleep(3 * time.Second)
+	if recvd := len(s.blockNotifier.(*mock.MockBlockNotifier).ReceivedEvents()); recvd < 1 {
+		t.Errorf("Received %d pending block notifications, expected at least 1", recvd)
+	}
 }
 
 // Helper method to generate pending queue with random blocks
