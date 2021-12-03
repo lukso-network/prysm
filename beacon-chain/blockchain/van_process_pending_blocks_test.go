@@ -207,6 +207,7 @@ func TestService_PandoraShardInfo(t *testing.T) {
 	require.NoError(t, err)
 	err = s.verifyPandoraShardInfo(parentBlk, wrappedBlk)
 	require.NoError(t, err)
+	s.publishBlock(wrappedBlk)
 	time.Sleep(3 * time.Second)
 	if recvd := len(s.blockNotifier.(*mock.MockBlockNotifier).ReceivedEvents()); recvd < 1 {
 		t.Errorf("Received %d pending block notifications, expected at least 1", recvd)

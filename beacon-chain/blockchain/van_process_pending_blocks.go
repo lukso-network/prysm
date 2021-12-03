@@ -232,7 +232,7 @@ func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeac
 	// Checking length of current block's pandora shard info
 	curPanShards := curBlk.Block().Body().PandoraShards()
 
-	if parentBlk == nil || len(parentBlk.Block().Body().PandoraShards()) == 0 {
+	if parentBlk.IsNil() || len(parentBlk.Block().Body().PandoraShards()) == 0 {
 		return nil
 	}
 
