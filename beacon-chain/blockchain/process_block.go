@@ -123,6 +123,17 @@ func (s *Service) onBlock(ctx context.Context, signed interfaces.SignedBeaconBlo
 				"%d and parentRoot: %#x", b.Slot(), b.ParentRoot())
 		}
 
+		// If the block does not exist in db, check again if block exists in initial sync block cache.
+		// This could happen as the node first syncs to head.
+		if (parentBlk == nil || parentBlk.IsNil()) && s.hasInitSyncBlock(parentRoot) {
+			parentBlk = s.getInitSyncBlock(parentRoot)
+		}
+
+		if parentBlk == nil {
+			return errors.Wrapf(errParentDoesNotExist, "could not verify pandora shard info "+
+				"onBlock with slot: %d and parentHash: %#x", b.Slot(), b.ParentRoot())
+		}
+
 		// verify pandora sharding info in live sync mode
 		if err := s.verifyPandoraShardInfo(parentBlk, signed); err != nil {
 			return errors.Wrap(err, "could not verify pandora shard info onBlock")
@@ -315,6 +326,17 @@ func (s *Service) onBlockBatch(ctx context.Context, blks []interfaces.SignedBeac
 		parentRoot := bytesutil.ToBytes32(blks[0].Block().ParentRoot())
 		parentBlk, err := s.cfg.BeaconDB.Block(s.ctx, parentRoot)
 		if err != nil {
+			return nil, nil, errors.Wrapf(errParentDoesNotExist, "could not verify pandora shard info "+
+				"onBlockBatch with slot: %d and parentHash: %#x", blks[0].Block().Slot(), blks[0].Block().ParentRoot())
+		}
+
+		// If the block does not exist in db, check again if block exists in initial sync block cache.
+		// This could happen as the node first syncs to head.
+		if (parentBlk == nil || parentBlk.IsNil()) && s.hasInitSyncBlock(parentRoot) {
+			parentBlk = s.getInitSyncBlock(parentRoot)
+		}
+
+		if parentBlk == nil {
 			return nil, nil, errors.Wrapf(errParentDoesNotExist, "could not verify pandora shard info "+
 				"onBlockBatch with slot: %d and parentHash: %#x", blks[0].Block().Slot(), blks[0].Block().ParentRoot())
 		}
