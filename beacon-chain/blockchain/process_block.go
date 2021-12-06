@@ -125,11 +125,11 @@ func (s *Service) onBlock(ctx context.Context, signed interfaces.SignedBeaconBlo
 
 		// If the block does not exist in db, check again if block exists in initial sync block cache.
 		// This could happen as the node first syncs to head.
-		if (parentBlk == nil || parentBlk.IsNil()) && s.hasInitSyncBlock(parentRoot) {
+		if parentBlk.IsNil() && s.hasInitSyncBlock(parentRoot) {
 			parentBlk = s.getInitSyncBlock(parentRoot)
 		}
 
-		if parentBlk == nil {
+		if parentBlk.IsNil() {
 			return errors.Wrapf(errParentDoesNotExist, "could not verify pandora shard info "+
 				"onBlock with slot: %d and parentHash: %#x", b.Slot(), b.ParentRoot())
 		}
@@ -332,11 +332,11 @@ func (s *Service) onBlockBatch(ctx context.Context, blks []interfaces.SignedBeac
 
 		// If the block does not exist in db, check again if block exists in initial sync block cache.
 		// This could happen as the node first syncs to head.
-		if (parentBlk == nil || parentBlk.IsNil()) && s.hasInitSyncBlock(parentRoot) {
+		if parentBlk.IsNil() && s.hasInitSyncBlock(parentRoot) {
 			parentBlk = s.getInitSyncBlock(parentRoot)
 		}
 
-		if parentBlk == nil {
+		if parentBlk.IsNil() {
 			return nil, nil, errors.Wrapf(errParentDoesNotExist, "could not verify pandora shard info "+
 				"onBlockBatch with slot: %d and parentHash: %#x", blks[0].Block().Slot(), blks[0].Block().ParentRoot())
 		}
