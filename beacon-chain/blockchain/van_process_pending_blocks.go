@@ -28,6 +28,7 @@ var (
 	errInvalidRpcClientResLen     = errors.New("invalid length of orchestrator confirmation response")
 	errInvalidConfirmationData    = errors.New("invalid orchestrator confirmation")
 	errParentDoesNotExist         = errors.New("beacon node doesn't have a parent in db with root")
+	errUnknownParent              = errors.New("unknown parent")
 )
 
 // ConfirmedData is the data which is sent after getting confirmation from orchestrator
@@ -232,8 +233,8 @@ func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeac
 	// Checking length of current block's pandora shard info
 	curPanShards := curBlk.Block().Body().PandoraShards()
 
-	if parentBlk.IsNil() || len(parentBlk.Block().Body().PandoraShards()) == 0 {
-		return nil
+	if parentBlk == nil || parentBlk.IsNil() || parentBlk.Block().IsNil() {
+		return errUnknownParent
 	}
 
 	parentPanShards = parentBlk.Block().Body().PandoraShards()
