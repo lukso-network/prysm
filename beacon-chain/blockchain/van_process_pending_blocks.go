@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	// Getting confirmation status from orchestrator after each confirmationStatusFetchingInverval
-	confirmationStatusFetchingInverval = 500 * time.Millisecond
+	// Getting confirmation status from orchestrator after each confirmationStatusFetchingInterval
+	confirmationStatusFetchingInterval = 500 * time.Millisecond
 	// maxPendingBlockTryLimit is the maximum limit for pending status of a block
 	maxPendingBlockTryLimit       = 40
 	errInvalidBlock               = errors.New("invalid block found in orchestrator")
@@ -28,17 +28,20 @@ var (
 	errInvalidRpcClientResLen     = errors.New("invalid length of orchestrator confirmation response")
 	errInvalidConfirmationData    = errors.New("invalid orchestrator confirmation")
 	errParentDoesNotExist         = errors.New("beacon node doesn't have a parent in db with root")
-	errUnknownParent              = errors.New("unknown parent")
+	errUnknownParent              = errors.New("unknown parent beacon block")
+	errUnknownParentBody          = errors.New("unknown parent beacon block body")
+	errUnknownCurrent             = errors.New("unknown current beacon block")
+	errUnknownCurrentBody         = errors.New("unknown current beacon block body")
 )
 
-// ConfirmedData is the data which is sent after getting confirmation from orchestrator
+// orcConfirmationData is the data which is sent after getting confirmation from orchestrator
 type orcConfirmationData struct {
 	slot          types.Slot
 	blockRootHash [32]byte
 	status        vanTypes.Status
 }
 
-// BlockProposal interface use when validator calls GetBlock api for proposing new beancon block
+// PendingQueueFetcher interface use when validator calls GetBlock api for proposing new beancon block
 type PendingQueueFetcher interface {
 	CanPropose() bool
 	ActivateOrcVerification()
@@ -74,14 +77,14 @@ func (s *Service) OrcVerification() bool {
 	return s.orcVerification
 }
 
-// SetLatestSentEpoch
+// setLatestSentEpoch
 func (s *Service) setLatestSentEpoch(epoch types.Epoch) {
 	s.latestSentEpochLock.Lock()
 	defer s.latestSentEpochLock.Unlock()
 	s.latestSentEpoch = epoch
 }
 
-// GetLatestSentEpoch
+// getLatestSentEpoch
 func (s *Service) getLatestSentEpoch() types.Epoch {
 	s.latestSentEpochLock.RLock()
 	defer s.latestSentEpochLock.RUnlock()
@@ -102,7 +105,7 @@ func (s *Service) activateBlockProposal() {
 	s.canPropose = true
 }
 
-// triggerEpochInfoPublisher publishes slot and state for publishing epoch info
+// publishEpochInfo publishes slot and state for publishing epoch info
 func (s *Service) publishEpochInfo(
 	slot types.Slot,
 	proposerIndices []types.ValidatorIndex,
@@ -127,7 +130,7 @@ func (s *Service) publishBlock(signedBlk interfaces.SignedBeaconBlock) {
 	})
 }
 
-// fetchOrcConfirmations process confirmation for pending blocks
+// fetchConfirmations process confirmation for pending blocks
 // -> After getting confirmation for a list of pending slots, it iterates through the list
 // -> If any slot gets invalid status then stop the iteration and start again from that slot
 // -> If any slot gets verified status then, publish the slots and block hashes to the blockchain service
@@ -161,7 +164,7 @@ func (s *Service) fetchConfirmations(signedBlk interfaces.SignedBeaconBlock) (*o
 	}, nil
 }
 
-// waitForConfirmationBlock method gets a block. It gets the status using notification by processOrcConfirmationLoop and then it
+// waitForConfirmation method gets a block. It gets the status using notification by processOrcConfirmationLoop and then it
 // takes action based on status of block. If status is-
 // Verified:
 // 	- return nil
@@ -180,7 +183,7 @@ func (s *Service) waitForConfirmation(b interfaces.SignedBeaconBlock) error {
 	log.WithField("slot", b.Block().Slot()).Debug("Vanguard is waiting for confirmation from orchestrator....")
 
 	pendingBlockTryLimit := maxPendingBlockTryLimit
-	ticker := time.NewTicker(confirmationStatusFetchingInverval)
+	ticker := time.NewTicker(confirmationStatusFetchingInterval)
 	for {
 		select {
 		case <-ticker.C:
@@ -222,23 +225,43 @@ func (s *Service) waitForConfirmation(b interfaces.SignedBeaconBlock) error {
 	}
 }
 
-// verifyPandoraShardInfo
+// verifyPandoraShardInfo verifies Pandora shard info
 func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeaconBlock) error {
 	var parentPanShards []*ethpb.PandoraShard
 
+	// Current beacon block
+	if curBlk == nil || curBlk.IsNil() {
+		return errUnknownCurrent
+	}
+	curBlkObj := curBlk.Block()
+	if curBlkObj.IsNil() {
+		return errUnknownCurrent
+	}
 	// For slot #1, we don't have shard info for previous block so short circuit here
-	if curBlk.Block().Slot() == 1 {
+	if curBlkObj.Slot() == 1 {
 		return nil
 	}
-	// Checking length of current block's pandora shard info
-	curPanShards := curBlk.Block().Body().PandoraShards()
+	curBlkObjBody := curBlkObj.Body()
+	if curBlkObjBody.IsNil() {
+		return errUnknownCurrentBody
+	}
+	curPanShards := curBlkObjBody.PandoraShards()
 
-	if parentBlk == nil || parentBlk.IsNil() || parentBlk.Block().IsNil() {
+	// Parent beacon block
+	if parentBlk == nil || parentBlk.IsNil() {
 		return errUnknownParent
 	}
+	parentBlkObj := parentBlk.Block()
+	if parentBlkObj.IsNil() {
+		return errUnknownParent
+	}
+	parentBlkObjBody := parentBlkObj.Body()
+	if parentBlkObjBody.IsNil() {
+		return errUnknownParentBody
+	}
+	parentPanShards = parentBlkObjBody.PandoraShards()
 
-	parentPanShards = parentBlk.Block().Body().PandoraShards()
-
+	// Checking length of current and parent block's pandora shard info
 	if len(curPanShards) > 0 && len(parentPanShards) > 0 {
 		// Checking current block pandora shard's parent with canonical head's pandora shard's header hash
 		canonicalShardingHash := common.BytesToHash(parentPanShards[0].Hash)
@@ -250,7 +273,7 @@ func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeac
 			WithField("canonicalShardingBlkNum", canonicalShardingBlkNum).WithField("curShardingParentHash", curShardingParentHash).
 			WithField("curShardingBlockNumber", curShardingBlockNumber)
 
-		if curShardingParentHash != canonicalShardingHash && curShardingBlockNumber != canonicalShardingBlkNum+1 {
+		if curShardingParentHash != canonicalShardingHash || curShardingBlockNumber != canonicalShardingBlkNum+1 {
 			commonLog.WithError(errInvalidPandoraShardInfo).Error("Failed to verify pandora sharding info")
 			return errInvalidPandoraShardInfo
 		}

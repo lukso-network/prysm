@@ -1048,3 +1048,92 @@ func TestRemoveBlockAttestationsInPool_NonCanonical(t *testing.T) {
 	require.NoError(t, service.pruneCanonicalAttsFromPool(ctx, r, wrapper.WrappedPhase0SignedBeaconBlock(b)))
 	require.Equal(t, 1, service.cfg.AttPool.AggregatedAttestationCount())
 }
+
+func TestVerifyPandoraShardInfo(t *testing.T) {
+	ctx := context.Background()
+	beaconDB := testDB.SetupDB(t)
+
+	cfg := &Config{
+		BeaconDB: beaconDB,
+		StateGen: stategen.New(beaconDB),
+	}
+	service, err := NewService(ctx, cfg)
+	require.NoError(t, err)
+
+	s, err := v1.InitializeFromProto(&pb.BeaconState{Slot: 1, GenesisValidatorsRoot: params.BeaconConfig().ZeroHash[:]})
+	require.NoError(t, err)
+
+	genesisStateRoot := [32]byte{}
+	genesis := blocks.NewGenesisBlock(genesisStateRoot[:])
+	assert.NoError(t, beaconDB.SaveBlock(ctx, wrapper.WrappedPhase0SignedBeaconBlock(genesis)))
+	gRoot, err := genesis.Block.HashTreeRoot()
+	require.NoError(t, err)
+	service.finalizedCheckpt = &ethpb.Checkpoint{
+		Root: gRoot[:],
+	}
+	service.cfg.ForkChoiceStore = protoarray.New(0, 0, [32]byte{})
+	service.saveInitSyncBlock(gRoot, wrapper.WrappedPhase0SignedBeaconBlock(genesis))
+
+	tests := []struct {
+		name          string
+		blk           *ethpb.SignedBeaconBlock
+		time          uint64
+		wantErr       bool
+		wantErrString string
+	}{
+		{
+			name: "Test with proper parent block and slot = 1",
+			blk: func() *ethpb.SignedBeaconBlock {
+				b := testutil.NewBeaconBlock()
+				b.Block.ParentRoot = gRoot[:]
+				b.Block.Slot = 1
+				return b
+			}(),
+		},
+		{
+			name: "Test with proper parent block and slot != 1",
+			blk: func() *ethpb.SignedBeaconBlock {
+				b := testutil.NewBeaconBlock()
+				b.Block.ParentRoot = gRoot[:]
+				b.Block.Slot = 2
+				return b
+			}(),
+		},
+		{
+			name: "Test with invalid parent block and slot != 1",
+			blk: func() *ethpb.SignedBeaconBlock {
+				b := testutil.NewBeaconBlock()
+				b.Block.ParentRoot = nil
+				b.Block.Slot = 2
+				return b
+			}(),
+			wantErr:       true,
+			wantErrString: "unknown parent beacon block",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.NoError(t, service.cfg.BeaconDB.SaveStateSummary(ctx, &pb.StateSummary{Slot: 1, Root: gRoot[:]}))
+			require.NoError(t, service.cfg.StateGen.SaveState(ctx, gRoot, s))
+			if !tt.wantErr {
+				require.NoError(t, service.verifyBlkPreState(ctx, wrapper.WrappedPhase0BeaconBlock(tt.blk.Block)))
+			}
+
+			b := wrapper.WrappedPhase0SignedBeaconBlock(tt.blk).Copy()
+			blk := b.Block()
+
+			parentRoot := bytesutil.ToBytes32(blk.ParentRoot())
+			parentBlk, err := service.cfg.BeaconDB.Block(service.ctx, parentRoot)
+			assert.NoError(t, err)
+
+			err = service.verifyPandoraShardInfo(parentBlk, b)
+			if tt.wantErr {
+				assert.NotNil(t, err)
+				assert.DeepEqual(t, tt.wantErrString, err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
