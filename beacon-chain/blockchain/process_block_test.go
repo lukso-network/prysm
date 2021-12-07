@@ -1110,6 +1110,23 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 			wantErr:       true,
 			wantErrString: "unknown parent beacon block",
 		},
+		{
+			name:          "Test with invalid current block",
+			wantErr:       true,
+			wantErrString: "unknown current beacon block",
+		},
+		{
+			name: "Test with invalid current block body and slot != 1",
+			blk: func() *ethpb.SignedBeaconBlock {
+				b := new(ethpb.SignedBeaconBlock)
+				b.Block = new(ethpb.BeaconBlock)
+				b.Block.Slot = 2
+				b.Block.Body = nil
+				return b
+			}(),
+			wantErr:       true,
+			wantErrString: "unknown current beacon block",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1121,11 +1138,13 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 			}
 
 			b := wrapper.WrappedPhase0SignedBeaconBlock(tt.blk).Copy()
-			blk := b.Block()
-
-			parentRoot := bytesutil.ToBytes32(blk.ParentRoot())
-			parentBlk, err := service.cfg.BeaconDB.Block(service.ctx, parentRoot)
-			assert.NoError(t, err)
+			var parentBlk interfaces.SignedBeaconBlock
+			if !b.IsNil() {
+				blk := b.Block()
+				parentRoot := bytesutil.ToBytes32(blk.ParentRoot())
+				parentBlk, err = service.cfg.BeaconDB.Block(service.ctx, parentRoot)
+				assert.NoError(t, err)
+			}
 
 			err = service.verifyPandoraShardInfo(parentBlk, b)
 			if tt.wantErr {
