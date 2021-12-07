@@ -39,7 +39,6 @@ func TestService_PublishBlock(t *testing.T) {
 	require.NoError(t, err)
 	b := testutil.NewBeaconBlock()
 	wrappedBlk := wrapper.WrappedPhase0SignedBeaconBlock(b)
-
 	s.publishBlock(wrappedBlk)
 	time.Sleep(3 * time.Second)
 	if recvd := len(s.blockNotifier.(*mock.MockBlockNotifier).ReceivedEvents()); recvd < 1 {
