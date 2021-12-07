@@ -2712,7 +2712,6 @@ type MinimalConsensusInfo struct {
 	ValidatorList    []string                                  `protobuf:"bytes,2,rep,name=validator_list,json=validatorList,proto3" json:"validator_list,omitempty"`
 	EpochTimeStart   uint64                                    `protobuf:"varint,3,opt,name=epoch_time_start,json=epochTimeStart,proto3" json:"epoch_time_start,omitempty"`
 	SlotTimeDuration *duration.Duration                        `protobuf:"bytes,4,opt,name=slot_time_duration,json=slotTimeDuration,proto3" json:"slot_time_duration,omitempty"`
-	ReorgInfo        *Reorg                                    `protobuf:"bytes,5,opt,name=reorg_info,json=reorgInfo,proto3" json:"reorg_info,omitempty"`
 }
 
 func (x *MinimalConsensusInfo) Reset() {
@@ -2775,76 +2774,6 @@ func (x *MinimalConsensusInfo) GetSlotTimeDuration() *duration.Duration {
 	return nil
 }
 
-func (x *MinimalConsensusInfo) GetReorgInfo() *Reorg {
-	if x != nil {
-		return x.ReorgInfo
-	}
-	return nil
-}
-
-type Reorg struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	VanParentHash []byte                                   `protobuf:"bytes,1,opt,name=van_parent_hash,json=vanParentHash,proto3" json:"van_parent_hash,omitempty"`
-	PanParentHash []byte                                   `protobuf:"bytes,2,opt,name=pan_parent_hash,json=panParentHash,proto3" json:"pan_parent_hash,omitempty"`
-	NewSlot       github_com_prysmaticlabs_eth2_types.Slot `protobuf:"varint,3,opt,name=new_slot,json=newSlot,proto3" json:"new_slot,omitempty" cast-type:"github.com/prysmaticlabs/eth2-types.Slot"`
-}
-
-func (x *Reorg) Reset() {
-	*x = Reorg{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[35]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *Reorg) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*Reorg) ProtoMessage() {}
-
-func (x *Reorg) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[35]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use Reorg.ProtoReflect.Descriptor instead.
-func (*Reorg) Descriptor() ([]byte, []int) {
-	return file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP(), []int{35}
-}
-
-func (x *Reorg) GetVanParentHash() []byte {
-	if x != nil {
-		return x.VanParentHash
-	}
-	return nil
-}
-
-func (x *Reorg) GetPanParentHash() []byte {
-	if x != nil {
-		return x.PanParentHash
-	}
-	return nil
-}
-
-func (x *Reorg) GetNewSlot() github_com_prysmaticlabs_eth2_types.Slot {
-	if x != nil {
-		return x.NewSlot
-	}
-	return github_com_prysmaticlabs_eth2_types.Slot(0)
-}
-
 type StreamPendingBlocksRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2857,7 +2786,7 @@ type StreamPendingBlocksRequest struct {
 func (x *StreamPendingBlocksRequest) Reset() {
 	*x = StreamPendingBlocksRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2870,7 +2799,7 @@ func (x *StreamPendingBlocksRequest) String() string {
 func (*StreamPendingBlocksRequest) ProtoMessage() {}
 
 func (x *StreamPendingBlocksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2883,7 +2812,7 @@ func (x *StreamPendingBlocksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamPendingBlocksRequest.ProtoReflect.Descriptor instead.
 func (*StreamPendingBlocksRequest) Descriptor() ([]byte, []int) {
-	return file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP(), []int{36}
+	return file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *StreamPendingBlocksRequest) GetBlockRoot() []byte {
@@ -2913,7 +2842,7 @@ type StreamPendingBlockInfo struct {
 func (x *StreamPendingBlockInfo) Reset() {
 	*x = StreamPendingBlockInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2926,7 +2855,7 @@ func (x *StreamPendingBlockInfo) String() string {
 func (*StreamPendingBlockInfo) ProtoMessage() {}
 
 func (x *StreamPendingBlockInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2939,7 +2868,7 @@ func (x *StreamPendingBlockInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StreamPendingBlockInfo.ProtoReflect.Descriptor instead.
 func (*StreamPendingBlockInfo) Descriptor() ([]byte, []int) {
-	return file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP(), []int{37}
+	return file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *StreamPendingBlockInfo) GetBlock() *BeaconBlock {
@@ -2974,7 +2903,7 @@ type BeaconCommittees_CommitteeItem struct {
 func (x *BeaconCommittees_CommitteeItem) Reset() {
 	*x = BeaconCommittees_CommitteeItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2987,7 +2916,7 @@ func (x *BeaconCommittees_CommitteeItem) String() string {
 func (*BeaconCommittees_CommitteeItem) ProtoMessage() {}
 
 func (x *BeaconCommittees_CommitteeItem) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3021,7 +2950,7 @@ type BeaconCommittees_CommitteesList struct {
 func (x *BeaconCommittees_CommitteesList) Reset() {
 	*x = BeaconCommittees_CommitteesList{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[39]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3034,7 +2963,7 @@ func (x *BeaconCommittees_CommitteesList) String() string {
 func (*BeaconCommittees_CommitteesList) ProtoMessage() {}
 
 func (x *BeaconCommittees_CommitteesList) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[39]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3071,7 +3000,7 @@ type ValidatorBalances_Balance struct {
 func (x *ValidatorBalances_Balance) Reset() {
 	*x = ValidatorBalances_Balance{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3084,7 +3013,7 @@ func (x *ValidatorBalances_Balance) String() string {
 func (*ValidatorBalances_Balance) ProtoMessage() {}
 
 func (x *ValidatorBalances_Balance) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3140,7 +3069,7 @@ type Validators_ValidatorContainer struct {
 func (x *Validators_ValidatorContainer) Reset() {
 	*x = Validators_ValidatorContainer{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3153,7 +3082,7 @@ func (x *Validators_ValidatorContainer) String() string {
 func (*Validators_ValidatorContainer) ProtoMessage() {}
 
 func (x *Validators_ValidatorContainer) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3200,7 +3129,7 @@ type ValidatorAssignments_CommitteeAssignment struct {
 func (x *ValidatorAssignments_CommitteeAssignment) Reset() {
 	*x = ValidatorAssignments_CommitteeAssignment{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[43]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3213,7 +3142,7 @@ func (x *ValidatorAssignments_CommitteeAssignment) String() string {
 func (*ValidatorAssignments_CommitteeAssignment) ProtoMessage() {}
 
 func (x *ValidatorAssignments_CommitteeAssignment) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[43]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3297,7 +3226,7 @@ type IndividualVotesRespond_IndividualVote struct {
 func (x *IndividualVotesRespond_IndividualVote) Reset() {
 	*x = IndividualVotesRespond_IndividualVote{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[45]
+		mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3310,7 +3239,7 @@ func (x *IndividualVotesRespond_IndividualVote) String() string {
 func (*IndividualVotesRespond_IndividualVote) ProtoMessage() {}
 
 func (x *IndividualVotesRespond_IndividualVote) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[45]
+	mi := &file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4126,7 +4055,7 @@ var file_proto_eth_v1alpha1_beacon_chain_proto_rawDesc = []byte{
 	0x18, 0x29, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x79,
 	0x73, 0x6d, 0x61, 0x74, 0x69, 0x63, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x65, 0x74, 0x68, 0x32, 0x2d,
 	0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x52, 0x09, 0x66, 0x72, 0x6f,
-	0x6d, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x22, 0xb2, 0x02, 0x0a, 0x14, 0x4d, 0x69, 0x6e, 0x69, 0x6d,
+	0x6d, 0x45, 0x70, 0x6f, 0x63, 0x68, 0x22, 0xf5, 0x01, 0x0a, 0x14, 0x4d, 0x69, 0x6e, 0x69, 0x6d,
 	0x61, 0x6c, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x12,
 	0x43, 0x0a, 0x05, 0x65, 0x70, 0x6f, 0x63, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x42, 0x2d,
 	0x82, 0xb5, 0x18, 0x29, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70,
@@ -4141,21 +4070,7 @@ var file_proto_eth_v1alpha1_beacon_chain_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x5f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x10, 0x73, 0x6c,
-	0x6f, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3b,
-	0x0a, 0x0a, 0x72, 0x65, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d, 0x2e, 0x65, 0x74,
-	0x68, 0x2e, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x2e, 0x52, 0x65, 0x6f, 0x72, 0x67,
-	0x52, 0x09, 0x72, 0x65, 0x6f, 0x72, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0xa0, 0x01, 0x0a, 0x05,
-	0x52, 0x65, 0x6f, 0x72, 0x67, 0x12, 0x26, 0x0a, 0x0f, 0x76, 0x61, 0x6e, 0x5f, 0x70, 0x61, 0x72,
-	0x65, 0x6e, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0d,
-	0x76, 0x61, 0x6e, 0x50, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x26, 0x0a,
-	0x0f, 0x70, 0x61, 0x6e, 0x5f, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0d, 0x70, 0x61, 0x6e, 0x50, 0x61, 0x72, 0x65, 0x6e,
-	0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x47, 0x0a, 0x08, 0x6e, 0x65, 0x77, 0x5f, 0x73, 0x6c, 0x6f,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x42, 0x2c, 0x82, 0xb5, 0x18, 0x28, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x79, 0x73, 0x6d, 0x61, 0x74, 0x69,
-	0x63, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x65, 0x74, 0x68, 0x32, 0x2d, 0x74, 0x79, 0x70, 0x65, 0x73,
-	0x2e, 0x53, 0x6c, 0x6f, 0x74, 0x52, 0x07, 0x6e, 0x65, 0x77, 0x53, 0x6c, 0x6f, 0x74, 0x22, 0x86,
+	0x6f, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x86,
 	0x01, 0x0a, 0x1a, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
 	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a,
 	0x0a, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
@@ -4468,7 +4383,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_rawDescGZIP() []byte {
 }
 
 var file_proto_eth_v1alpha1_beacon_chain_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
+var file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
 var file_proto_eth_v1alpha1_beacon_chain_proto_goTypes = []interface{}{
 	(SetAction)(0),                                   // 0: ethereum.eth.v1alpha1.SetAction
 	(*ValidatorChangeSet)(nil),                       // 1: ethereum.eth.v1alpha1.ValidatorChangeSet
@@ -4506,106 +4421,104 @@ var file_proto_eth_v1alpha1_beacon_chain_proto_goTypes = []interface{}{
 	(*WeakSubjectivityCheckpoint)(nil),               // 33: ethereum.eth.v1alpha1.WeakSubjectivityCheckpoint
 	(*MinimalConsensusInfoRequest)(nil),              // 34: ethereum.eth.v1alpha1.MinimalConsensusInfoRequest
 	(*MinimalConsensusInfo)(nil),                     // 35: ethereum.eth.v1alpha1.MinimalConsensusInfo
-	(*Reorg)(nil),                                    // 36: ethereum.eth.v1alpha1.Reorg
-	(*StreamPendingBlocksRequest)(nil),               // 37: ethereum.eth.v1alpha1.StreamPendingBlocksRequest
-	(*StreamPendingBlockInfo)(nil),                   // 38: ethereum.eth.v1alpha1.StreamPendingBlockInfo
-	(*BeaconCommittees_CommitteeItem)(nil),           // 39: ethereum.eth.v1alpha1.BeaconCommittees.CommitteeItem
-	(*BeaconCommittees_CommitteesList)(nil),          // 40: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList
-	nil,                                              // 41: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry
-	(*ValidatorBalances_Balance)(nil),                // 42: ethereum.eth.v1alpha1.ValidatorBalances.Balance
-	(*Validators_ValidatorContainer)(nil),            // 43: ethereum.eth.v1alpha1.Validators.ValidatorContainer
-	(*ValidatorAssignments_CommitteeAssignment)(nil), // 44: ethereum.eth.v1alpha1.ValidatorAssignments.CommitteeAssignment
-	nil, // 45: ethereum.eth.v1alpha1.BeaconConfig.ConfigEntry
-	(*IndividualVotesRespond_IndividualVote)(nil), // 46: ethereum.eth.v1alpha1.IndividualVotesRespond.IndividualVote
-	(*Attestation)(nil),                           // 47: ethereum.eth.v1alpha1.Attestation
-	(*IndexedAttestation)(nil),                    // 48: ethereum.eth.v1alpha1.IndexedAttestation
-	(*SignedBeaconBlock)(nil),                     // 49: ethereum.eth.v1alpha1.SignedBeaconBlock
-	(*ValidatorParticipation)(nil),                // 50: ethereum.eth.v1alpha1.ValidatorParticipation
-	(*duration.Duration)(nil),                     // 51: google.protobuf.Duration
-	(*BeaconBlock)(nil),                           // 52: ethereum.eth.v1alpha1.BeaconBlock
-	(*Validator)(nil),                             // 53: ethereum.eth.v1alpha1.Validator
-	(*empty.Empty)(nil),                           // 54: google.protobuf.Empty
-	(*AttesterSlashing)(nil),                      // 55: ethereum.eth.v1alpha1.AttesterSlashing
-	(*ProposerSlashing)(nil),                      // 56: ethereum.eth.v1alpha1.ProposerSlashing
-	(*ValidatorInfo)(nil),                         // 57: ethereum.eth.v1alpha1.ValidatorInfo
+	(*StreamPendingBlocksRequest)(nil),               // 36: ethereum.eth.v1alpha1.StreamPendingBlocksRequest
+	(*StreamPendingBlockInfo)(nil),                   // 37: ethereum.eth.v1alpha1.StreamPendingBlockInfo
+	(*BeaconCommittees_CommitteeItem)(nil),           // 38: ethereum.eth.v1alpha1.BeaconCommittees.CommitteeItem
+	(*BeaconCommittees_CommitteesList)(nil),          // 39: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList
+	nil,                                              // 40: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry
+	(*ValidatorBalances_Balance)(nil),                // 41: ethereum.eth.v1alpha1.ValidatorBalances.Balance
+	(*Validators_ValidatorContainer)(nil),            // 42: ethereum.eth.v1alpha1.Validators.ValidatorContainer
+	(*ValidatorAssignments_CommitteeAssignment)(nil), // 43: ethereum.eth.v1alpha1.ValidatorAssignments.CommitteeAssignment
+	nil, // 44: ethereum.eth.v1alpha1.BeaconConfig.ConfigEntry
+	(*IndividualVotesRespond_IndividualVote)(nil), // 45: ethereum.eth.v1alpha1.IndividualVotesRespond.IndividualVote
+	(*Attestation)(nil),                           // 46: ethereum.eth.v1alpha1.Attestation
+	(*IndexedAttestation)(nil),                    // 47: ethereum.eth.v1alpha1.IndexedAttestation
+	(*SignedBeaconBlock)(nil),                     // 48: ethereum.eth.v1alpha1.SignedBeaconBlock
+	(*ValidatorParticipation)(nil),                // 49: ethereum.eth.v1alpha1.ValidatorParticipation
+	(*duration.Duration)(nil),                     // 50: google.protobuf.Duration
+	(*BeaconBlock)(nil),                           // 51: ethereum.eth.v1alpha1.BeaconBlock
+	(*Validator)(nil),                             // 52: ethereum.eth.v1alpha1.Validator
+	(*empty.Empty)(nil),                           // 53: google.protobuf.Empty
+	(*AttesterSlashing)(nil),                      // 54: ethereum.eth.v1alpha1.AttesterSlashing
+	(*ProposerSlashing)(nil),                      // 55: ethereum.eth.v1alpha1.ProposerSlashing
+	(*ValidatorInfo)(nil),                         // 56: ethereum.eth.v1alpha1.ValidatorInfo
 }
 var file_proto_eth_v1alpha1_beacon_chain_proto_depIdxs = []int32{
 	0,  // 0: ethereum.eth.v1alpha1.ValidatorChangeSet.action:type_name -> ethereum.eth.v1alpha1.SetAction
-	47, // 1: ethereum.eth.v1alpha1.ListAttestationsResponse.attestations:type_name -> ethereum.eth.v1alpha1.Attestation
-	48, // 2: ethereum.eth.v1alpha1.ListIndexedAttestationsResponse.indexed_attestations:type_name -> ethereum.eth.v1alpha1.IndexedAttestation
+	46, // 1: ethereum.eth.v1alpha1.ListAttestationsResponse.attestations:type_name -> ethereum.eth.v1alpha1.Attestation
+	47, // 2: ethereum.eth.v1alpha1.ListIndexedAttestationsResponse.indexed_attestations:type_name -> ethereum.eth.v1alpha1.IndexedAttestation
 	9,  // 3: ethereum.eth.v1alpha1.ListBlocksResponse.blockContainers:type_name -> ethereum.eth.v1alpha1.BeaconBlockContainer
-	49, // 4: ethereum.eth.v1alpha1.BeaconBlockContainer.block:type_name -> ethereum.eth.v1alpha1.SignedBeaconBlock
-	41, // 5: ethereum.eth.v1alpha1.BeaconCommittees.committees:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry
-	42, // 6: ethereum.eth.v1alpha1.ValidatorBalances.balances:type_name -> ethereum.eth.v1alpha1.ValidatorBalances.Balance
-	43, // 7: ethereum.eth.v1alpha1.Validators.validator_list:type_name -> ethereum.eth.v1alpha1.Validators.ValidatorContainer
-	44, // 8: ethereum.eth.v1alpha1.ValidatorAssignments.assignments:type_name -> ethereum.eth.v1alpha1.ValidatorAssignments.CommitteeAssignment
-	50, // 9: ethereum.eth.v1alpha1.ValidatorParticipationResponse.participation:type_name -> ethereum.eth.v1alpha1.ValidatorParticipation
-	47, // 10: ethereum.eth.v1alpha1.AttestationPoolResponse.attestations:type_name -> ethereum.eth.v1alpha1.Attestation
-	45, // 11: ethereum.eth.v1alpha1.BeaconConfig.config:type_name -> ethereum.eth.v1alpha1.BeaconConfig.ConfigEntry
-	46, // 12: ethereum.eth.v1alpha1.IndividualVotesRespond.individual_votes:type_name -> ethereum.eth.v1alpha1.IndividualVotesRespond.IndividualVote
-	51, // 13: ethereum.eth.v1alpha1.MinimalConsensusInfo.slot_time_duration:type_name -> google.protobuf.Duration
-	36, // 14: ethereum.eth.v1alpha1.MinimalConsensusInfo.reorg_info:type_name -> ethereum.eth.v1alpha1.Reorg
-	52, // 15: ethereum.eth.v1alpha1.StreamPendingBlockInfo.block:type_name -> ethereum.eth.v1alpha1.BeaconBlock
-	39, // 16: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList.committees:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteeItem
-	40, // 17: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry.value:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList
-	53, // 18: ethereum.eth.v1alpha1.Validators.ValidatorContainer.validator:type_name -> ethereum.eth.v1alpha1.Validator
-	3,  // 19: ethereum.eth.v1alpha1.BeaconChain.ListAttestations:input_type -> ethereum.eth.v1alpha1.ListAttestationsRequest
-	2,  // 20: ethereum.eth.v1alpha1.BeaconChain.ListIndexedAttestations:input_type -> ethereum.eth.v1alpha1.ListIndexedAttestationsRequest
-	54, // 21: ethereum.eth.v1alpha1.BeaconChain.StreamAttestations:input_type -> google.protobuf.Empty
-	54, // 22: ethereum.eth.v1alpha1.BeaconChain.StreamIndexedAttestations:input_type -> google.protobuf.Empty
-	27, // 23: ethereum.eth.v1alpha1.BeaconChain.AttestationPool:input_type -> ethereum.eth.v1alpha1.AttestationPoolRequest
-	6,  // 24: ethereum.eth.v1alpha1.BeaconChain.ListBlocks:input_type -> ethereum.eth.v1alpha1.ListBlocksRequest
-	8,  // 25: ethereum.eth.v1alpha1.BeaconChain.StreamBlocks:input_type -> ethereum.eth.v1alpha1.StreamBlocksRequest
-	54, // 26: ethereum.eth.v1alpha1.BeaconChain.StreamChainHead:input_type -> google.protobuf.Empty
-	54, // 27: ethereum.eth.v1alpha1.BeaconChain.GetChainHead:input_type -> google.protobuf.Empty
-	54, // 28: ethereum.eth.v1alpha1.BeaconChain.GetWeakSubjectivityCheckpoint:input_type -> google.protobuf.Empty
-	11, // 29: ethereum.eth.v1alpha1.BeaconChain.ListBeaconCommittees:input_type -> ethereum.eth.v1alpha1.ListCommitteesRequest
-	13, // 30: ethereum.eth.v1alpha1.BeaconChain.ListValidatorBalances:input_type -> ethereum.eth.v1alpha1.ListValidatorBalancesRequest
-	15, // 31: ethereum.eth.v1alpha1.BeaconChain.ListValidators:input_type -> ethereum.eth.v1alpha1.ListValidatorsRequest
-	16, // 32: ethereum.eth.v1alpha1.BeaconChain.GetValidator:input_type -> ethereum.eth.v1alpha1.GetValidatorRequest
-	18, // 33: ethereum.eth.v1alpha1.BeaconChain.GetValidatorActiveSetChanges:input_type -> ethereum.eth.v1alpha1.GetValidatorActiveSetChangesRequest
-	54, // 34: ethereum.eth.v1alpha1.BeaconChain.GetValidatorQueue:input_type -> google.protobuf.Empty
-	20, // 35: ethereum.eth.v1alpha1.BeaconChain.GetValidatorPerformance:input_type -> ethereum.eth.v1alpha1.ValidatorPerformanceRequest
-	23, // 36: ethereum.eth.v1alpha1.BeaconChain.ListValidatorAssignments:input_type -> ethereum.eth.v1alpha1.ListValidatorAssignmentsRequest
-	25, // 37: ethereum.eth.v1alpha1.BeaconChain.GetValidatorParticipation:input_type -> ethereum.eth.v1alpha1.GetValidatorParticipationRequest
-	54, // 38: ethereum.eth.v1alpha1.BeaconChain.GetBeaconConfig:input_type -> google.protobuf.Empty
-	1,  // 39: ethereum.eth.v1alpha1.BeaconChain.StreamValidatorsInfo:input_type -> ethereum.eth.v1alpha1.ValidatorChangeSet
-	55, // 40: ethereum.eth.v1alpha1.BeaconChain.SubmitAttesterSlashing:input_type -> ethereum.eth.v1alpha1.AttesterSlashing
-	56, // 41: ethereum.eth.v1alpha1.BeaconChain.SubmitProposerSlashing:input_type -> ethereum.eth.v1alpha1.ProposerSlashing
-	31, // 42: ethereum.eth.v1alpha1.BeaconChain.GetIndividualVotes:input_type -> ethereum.eth.v1alpha1.IndividualVotesRequest
-	34, // 43: ethereum.eth.v1alpha1.BeaconChain.StreamMinimalConsensusInfo:input_type -> ethereum.eth.v1alpha1.MinimalConsensusInfoRequest
-	37, // 44: ethereum.eth.v1alpha1.BeaconChain.StreamNewPendingBlocks:input_type -> ethereum.eth.v1alpha1.StreamPendingBlocksRequest
-	4,  // 45: ethereum.eth.v1alpha1.BeaconChain.ListAttestations:output_type -> ethereum.eth.v1alpha1.ListAttestationsResponse
-	5,  // 46: ethereum.eth.v1alpha1.BeaconChain.ListIndexedAttestations:output_type -> ethereum.eth.v1alpha1.ListIndexedAttestationsResponse
-	47, // 47: ethereum.eth.v1alpha1.BeaconChain.StreamAttestations:output_type -> ethereum.eth.v1alpha1.Attestation
-	48, // 48: ethereum.eth.v1alpha1.BeaconChain.StreamIndexedAttestations:output_type -> ethereum.eth.v1alpha1.IndexedAttestation
-	28, // 49: ethereum.eth.v1alpha1.BeaconChain.AttestationPool:output_type -> ethereum.eth.v1alpha1.AttestationPoolResponse
-	7,  // 50: ethereum.eth.v1alpha1.BeaconChain.ListBlocks:output_type -> ethereum.eth.v1alpha1.ListBlocksResponse
-	49, // 51: ethereum.eth.v1alpha1.BeaconChain.StreamBlocks:output_type -> ethereum.eth.v1alpha1.SignedBeaconBlock
-	10, // 52: ethereum.eth.v1alpha1.BeaconChain.StreamChainHead:output_type -> ethereum.eth.v1alpha1.ChainHead
-	10, // 53: ethereum.eth.v1alpha1.BeaconChain.GetChainHead:output_type -> ethereum.eth.v1alpha1.ChainHead
-	33, // 54: ethereum.eth.v1alpha1.BeaconChain.GetWeakSubjectivityCheckpoint:output_type -> ethereum.eth.v1alpha1.WeakSubjectivityCheckpoint
-	12, // 55: ethereum.eth.v1alpha1.BeaconChain.ListBeaconCommittees:output_type -> ethereum.eth.v1alpha1.BeaconCommittees
-	14, // 56: ethereum.eth.v1alpha1.BeaconChain.ListValidatorBalances:output_type -> ethereum.eth.v1alpha1.ValidatorBalances
-	17, // 57: ethereum.eth.v1alpha1.BeaconChain.ListValidators:output_type -> ethereum.eth.v1alpha1.Validators
-	53, // 58: ethereum.eth.v1alpha1.BeaconChain.GetValidator:output_type -> ethereum.eth.v1alpha1.Validator
-	19, // 59: ethereum.eth.v1alpha1.BeaconChain.GetValidatorActiveSetChanges:output_type -> ethereum.eth.v1alpha1.ActiveSetChanges
-	22, // 60: ethereum.eth.v1alpha1.BeaconChain.GetValidatorQueue:output_type -> ethereum.eth.v1alpha1.ValidatorQueue
-	21, // 61: ethereum.eth.v1alpha1.BeaconChain.GetValidatorPerformance:output_type -> ethereum.eth.v1alpha1.ValidatorPerformanceResponse
-	24, // 62: ethereum.eth.v1alpha1.BeaconChain.ListValidatorAssignments:output_type -> ethereum.eth.v1alpha1.ValidatorAssignments
-	26, // 63: ethereum.eth.v1alpha1.BeaconChain.GetValidatorParticipation:output_type -> ethereum.eth.v1alpha1.ValidatorParticipationResponse
-	29, // 64: ethereum.eth.v1alpha1.BeaconChain.GetBeaconConfig:output_type -> ethereum.eth.v1alpha1.BeaconConfig
-	57, // 65: ethereum.eth.v1alpha1.BeaconChain.StreamValidatorsInfo:output_type -> ethereum.eth.v1alpha1.ValidatorInfo
-	30, // 66: ethereum.eth.v1alpha1.BeaconChain.SubmitAttesterSlashing:output_type -> ethereum.eth.v1alpha1.SubmitSlashingResponse
-	30, // 67: ethereum.eth.v1alpha1.BeaconChain.SubmitProposerSlashing:output_type -> ethereum.eth.v1alpha1.SubmitSlashingResponse
-	32, // 68: ethereum.eth.v1alpha1.BeaconChain.GetIndividualVotes:output_type -> ethereum.eth.v1alpha1.IndividualVotesRespond
-	35, // 69: ethereum.eth.v1alpha1.BeaconChain.StreamMinimalConsensusInfo:output_type -> ethereum.eth.v1alpha1.MinimalConsensusInfo
-	38, // 70: ethereum.eth.v1alpha1.BeaconChain.StreamNewPendingBlocks:output_type -> ethereum.eth.v1alpha1.StreamPendingBlockInfo
-	45, // [45:71] is the sub-list for method output_type
-	19, // [19:45] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	48, // 4: ethereum.eth.v1alpha1.BeaconBlockContainer.block:type_name -> ethereum.eth.v1alpha1.SignedBeaconBlock
+	40, // 5: ethereum.eth.v1alpha1.BeaconCommittees.committees:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry
+	41, // 6: ethereum.eth.v1alpha1.ValidatorBalances.balances:type_name -> ethereum.eth.v1alpha1.ValidatorBalances.Balance
+	42, // 7: ethereum.eth.v1alpha1.Validators.validator_list:type_name -> ethereum.eth.v1alpha1.Validators.ValidatorContainer
+	43, // 8: ethereum.eth.v1alpha1.ValidatorAssignments.assignments:type_name -> ethereum.eth.v1alpha1.ValidatorAssignments.CommitteeAssignment
+	49, // 9: ethereum.eth.v1alpha1.ValidatorParticipationResponse.participation:type_name -> ethereum.eth.v1alpha1.ValidatorParticipation
+	46, // 10: ethereum.eth.v1alpha1.AttestationPoolResponse.attestations:type_name -> ethereum.eth.v1alpha1.Attestation
+	44, // 11: ethereum.eth.v1alpha1.BeaconConfig.config:type_name -> ethereum.eth.v1alpha1.BeaconConfig.ConfigEntry
+	45, // 12: ethereum.eth.v1alpha1.IndividualVotesRespond.individual_votes:type_name -> ethereum.eth.v1alpha1.IndividualVotesRespond.IndividualVote
+	50, // 13: ethereum.eth.v1alpha1.MinimalConsensusInfo.slot_time_duration:type_name -> google.protobuf.Duration
+	51, // 14: ethereum.eth.v1alpha1.StreamPendingBlockInfo.block:type_name -> ethereum.eth.v1alpha1.BeaconBlock
+	38, // 15: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList.committees:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteeItem
+	39, // 16: ethereum.eth.v1alpha1.BeaconCommittees.CommitteesEntry.value:type_name -> ethereum.eth.v1alpha1.BeaconCommittees.CommitteesList
+	52, // 17: ethereum.eth.v1alpha1.Validators.ValidatorContainer.validator:type_name -> ethereum.eth.v1alpha1.Validator
+	3,  // 18: ethereum.eth.v1alpha1.BeaconChain.ListAttestations:input_type -> ethereum.eth.v1alpha1.ListAttestationsRequest
+	2,  // 19: ethereum.eth.v1alpha1.BeaconChain.ListIndexedAttestations:input_type -> ethereum.eth.v1alpha1.ListIndexedAttestationsRequest
+	53, // 20: ethereum.eth.v1alpha1.BeaconChain.StreamAttestations:input_type -> google.protobuf.Empty
+	53, // 21: ethereum.eth.v1alpha1.BeaconChain.StreamIndexedAttestations:input_type -> google.protobuf.Empty
+	27, // 22: ethereum.eth.v1alpha1.BeaconChain.AttestationPool:input_type -> ethereum.eth.v1alpha1.AttestationPoolRequest
+	6,  // 23: ethereum.eth.v1alpha1.BeaconChain.ListBlocks:input_type -> ethereum.eth.v1alpha1.ListBlocksRequest
+	8,  // 24: ethereum.eth.v1alpha1.BeaconChain.StreamBlocks:input_type -> ethereum.eth.v1alpha1.StreamBlocksRequest
+	53, // 25: ethereum.eth.v1alpha1.BeaconChain.StreamChainHead:input_type -> google.protobuf.Empty
+	53, // 26: ethereum.eth.v1alpha1.BeaconChain.GetChainHead:input_type -> google.protobuf.Empty
+	53, // 27: ethereum.eth.v1alpha1.BeaconChain.GetWeakSubjectivityCheckpoint:input_type -> google.protobuf.Empty
+	11, // 28: ethereum.eth.v1alpha1.BeaconChain.ListBeaconCommittees:input_type -> ethereum.eth.v1alpha1.ListCommitteesRequest
+	13, // 29: ethereum.eth.v1alpha1.BeaconChain.ListValidatorBalances:input_type -> ethereum.eth.v1alpha1.ListValidatorBalancesRequest
+	15, // 30: ethereum.eth.v1alpha1.BeaconChain.ListValidators:input_type -> ethereum.eth.v1alpha1.ListValidatorsRequest
+	16, // 31: ethereum.eth.v1alpha1.BeaconChain.GetValidator:input_type -> ethereum.eth.v1alpha1.GetValidatorRequest
+	18, // 32: ethereum.eth.v1alpha1.BeaconChain.GetValidatorActiveSetChanges:input_type -> ethereum.eth.v1alpha1.GetValidatorActiveSetChangesRequest
+	53, // 33: ethereum.eth.v1alpha1.BeaconChain.GetValidatorQueue:input_type -> google.protobuf.Empty
+	20, // 34: ethereum.eth.v1alpha1.BeaconChain.GetValidatorPerformance:input_type -> ethereum.eth.v1alpha1.ValidatorPerformanceRequest
+	23, // 35: ethereum.eth.v1alpha1.BeaconChain.ListValidatorAssignments:input_type -> ethereum.eth.v1alpha1.ListValidatorAssignmentsRequest
+	25, // 36: ethereum.eth.v1alpha1.BeaconChain.GetValidatorParticipation:input_type -> ethereum.eth.v1alpha1.GetValidatorParticipationRequest
+	53, // 37: ethereum.eth.v1alpha1.BeaconChain.GetBeaconConfig:input_type -> google.protobuf.Empty
+	1,  // 38: ethereum.eth.v1alpha1.BeaconChain.StreamValidatorsInfo:input_type -> ethereum.eth.v1alpha1.ValidatorChangeSet
+	54, // 39: ethereum.eth.v1alpha1.BeaconChain.SubmitAttesterSlashing:input_type -> ethereum.eth.v1alpha1.AttesterSlashing
+	55, // 40: ethereum.eth.v1alpha1.BeaconChain.SubmitProposerSlashing:input_type -> ethereum.eth.v1alpha1.ProposerSlashing
+	31, // 41: ethereum.eth.v1alpha1.BeaconChain.GetIndividualVotes:input_type -> ethereum.eth.v1alpha1.IndividualVotesRequest
+	34, // 42: ethereum.eth.v1alpha1.BeaconChain.StreamMinimalConsensusInfo:input_type -> ethereum.eth.v1alpha1.MinimalConsensusInfoRequest
+	36, // 43: ethereum.eth.v1alpha1.BeaconChain.StreamNewPendingBlocks:input_type -> ethereum.eth.v1alpha1.StreamPendingBlocksRequest
+	4,  // 44: ethereum.eth.v1alpha1.BeaconChain.ListAttestations:output_type -> ethereum.eth.v1alpha1.ListAttestationsResponse
+	5,  // 45: ethereum.eth.v1alpha1.BeaconChain.ListIndexedAttestations:output_type -> ethereum.eth.v1alpha1.ListIndexedAttestationsResponse
+	46, // 46: ethereum.eth.v1alpha1.BeaconChain.StreamAttestations:output_type -> ethereum.eth.v1alpha1.Attestation
+	47, // 47: ethereum.eth.v1alpha1.BeaconChain.StreamIndexedAttestations:output_type -> ethereum.eth.v1alpha1.IndexedAttestation
+	28, // 48: ethereum.eth.v1alpha1.BeaconChain.AttestationPool:output_type -> ethereum.eth.v1alpha1.AttestationPoolResponse
+	7,  // 49: ethereum.eth.v1alpha1.BeaconChain.ListBlocks:output_type -> ethereum.eth.v1alpha1.ListBlocksResponse
+	48, // 50: ethereum.eth.v1alpha1.BeaconChain.StreamBlocks:output_type -> ethereum.eth.v1alpha1.SignedBeaconBlock
+	10, // 51: ethereum.eth.v1alpha1.BeaconChain.StreamChainHead:output_type -> ethereum.eth.v1alpha1.ChainHead
+	10, // 52: ethereum.eth.v1alpha1.BeaconChain.GetChainHead:output_type -> ethereum.eth.v1alpha1.ChainHead
+	33, // 53: ethereum.eth.v1alpha1.BeaconChain.GetWeakSubjectivityCheckpoint:output_type -> ethereum.eth.v1alpha1.WeakSubjectivityCheckpoint
+	12, // 54: ethereum.eth.v1alpha1.BeaconChain.ListBeaconCommittees:output_type -> ethereum.eth.v1alpha1.BeaconCommittees
+	14, // 55: ethereum.eth.v1alpha1.BeaconChain.ListValidatorBalances:output_type -> ethereum.eth.v1alpha1.ValidatorBalances
+	17, // 56: ethereum.eth.v1alpha1.BeaconChain.ListValidators:output_type -> ethereum.eth.v1alpha1.Validators
+	52, // 57: ethereum.eth.v1alpha1.BeaconChain.GetValidator:output_type -> ethereum.eth.v1alpha1.Validator
+	19, // 58: ethereum.eth.v1alpha1.BeaconChain.GetValidatorActiveSetChanges:output_type -> ethereum.eth.v1alpha1.ActiveSetChanges
+	22, // 59: ethereum.eth.v1alpha1.BeaconChain.GetValidatorQueue:output_type -> ethereum.eth.v1alpha1.ValidatorQueue
+	21, // 60: ethereum.eth.v1alpha1.BeaconChain.GetValidatorPerformance:output_type -> ethereum.eth.v1alpha1.ValidatorPerformanceResponse
+	24, // 61: ethereum.eth.v1alpha1.BeaconChain.ListValidatorAssignments:output_type -> ethereum.eth.v1alpha1.ValidatorAssignments
+	26, // 62: ethereum.eth.v1alpha1.BeaconChain.GetValidatorParticipation:output_type -> ethereum.eth.v1alpha1.ValidatorParticipationResponse
+	29, // 63: ethereum.eth.v1alpha1.BeaconChain.GetBeaconConfig:output_type -> ethereum.eth.v1alpha1.BeaconConfig
+	56, // 64: ethereum.eth.v1alpha1.BeaconChain.StreamValidatorsInfo:output_type -> ethereum.eth.v1alpha1.ValidatorInfo
+	30, // 65: ethereum.eth.v1alpha1.BeaconChain.SubmitAttesterSlashing:output_type -> ethereum.eth.v1alpha1.SubmitSlashingResponse
+	30, // 66: ethereum.eth.v1alpha1.BeaconChain.SubmitProposerSlashing:output_type -> ethereum.eth.v1alpha1.SubmitSlashingResponse
+	32, // 67: ethereum.eth.v1alpha1.BeaconChain.GetIndividualVotes:output_type -> ethereum.eth.v1alpha1.IndividualVotesRespond
+	35, // 68: ethereum.eth.v1alpha1.BeaconChain.StreamMinimalConsensusInfo:output_type -> ethereum.eth.v1alpha1.MinimalConsensusInfo
+	37, // 69: ethereum.eth.v1alpha1.BeaconChain.StreamNewPendingBlocks:output_type -> ethereum.eth.v1alpha1.StreamPendingBlockInfo
+	44, // [44:70] is the sub-list for method output_type
+	18, // [18:44] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_proto_eth_v1alpha1_beacon_chain_proto_init() }
@@ -5038,18 +4951,6 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 			}
 		}
 		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Reorg); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StreamPendingBlocksRequest); i {
 			case 0:
 				return &v.state
@@ -5061,7 +4962,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*StreamPendingBlockInfo); i {
 			case 0:
 				return &v.state
@@ -5073,7 +4974,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BeaconCommittees_CommitteeItem); i {
 			case 0:
 				return &v.state
@@ -5085,7 +4986,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BeaconCommittees_CommitteesList); i {
 			case 0:
 				return &v.state
@@ -5097,7 +4998,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ValidatorBalances_Balance); i {
 			case 0:
 				return &v.state
@@ -5109,7 +5010,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Validators_ValidatorContainer); i {
 			case 0:
 				return &v.state
@@ -5121,7 +5022,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ValidatorAssignments_CommitteeAssignment); i {
 			case 0:
 				return &v.state
@@ -5133,7 +5034,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 				return nil
 			}
 		}
-		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
+		file_proto_eth_v1alpha1_beacon_chain_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*IndividualVotesRespond_IndividualVote); i {
 			case 0:
 				return &v.state
@@ -5194,7 +5095,7 @@ func file_proto_eth_v1alpha1_beacon_chain_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_proto_eth_v1alpha1_beacon_chain_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   46,
+			NumMessages:   45,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
