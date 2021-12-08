@@ -56,9 +56,7 @@ func TestServer_StreamNewPendingBlocks_ContextCanceled(t *testing.T) {
 	exitRoutine <- true
 }
 
-// TODO(Atif)- Fix this test
 func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
-	t.Skip("PublishPrevBlocksBatch event tests skipped for short time")
 	db := dbTest.SetupDB(t)
 	ctx := context.Background()
 
@@ -98,30 +96,56 @@ func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 	// a state is required to save checkpoint
 	require.NoError(t, db.SaveState(ctx, beaconState, ckRoot))
 	require.NoError(t, db.SaveFinalizedCheckpoint(ctx, cp))
-	chainService := &chainMock.ChainService{State: beaconState}
+	require.NoError(t, err)
+	chainService := &chainMock.ChainService{
+		State:          beaconState,
+		CanonicalRoots: map[[32]byte]bool{},
+	}
 	bs := &Server{
-		Ctx:           ctx,
-		BeaconDB:      db,
-		BlockNotifier: chainService.BlockNotifier(),
+		Ctx:              ctx,
+		BeaconDB:         db,
+		BlockNotifier:    chainService.BlockNotifier(),
+		StateNotifier:    chainService.StateNotifier(),
+		HeadFetcher:      chainService,
+		CanonicalFetcher: chainService,
 	}
 	exitRoutine := make(chan bool)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockStream := mock.NewMockBeaconChain_StreamNewPendingBlocksServer(ctrl)
 	blkCnt := 0
-	mockStream.EXPECT().Send(gomock.Any()).Do(func(args interface{}) {
+	mockStream.EXPECT().Send(
+		ethpb.MinimalConsensusInfo{
+			Epoch:            0,
+			ValidatorList:    nil,
+			EpochTimeStart:   0,
+			SlotTimeDuration: nil,
+		},
+	).Do(func(args interface{}) {
 		blkCnt++
-		if blkCnt == 100 {
+		if blkCnt == 3 {
 			exitRoutine <- true
 		}
-	}).Return(nil).AnyTimes()
-	//mockStream.EXPECT().Context().Return(ctx)
+	})
+	mockStream.EXPECT().Context().Return(ctx).AnyTimes()
+
 	go func(tt *testing.T) {
-		bs.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
-			BlockRoot: []byte{1, 2, 3},
-			FromSlot:  0,
-		}, mockStream)
+		assert.NoError(tt,
+			bs.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
+				BlockRoot: []byte{1, 2, 3},
+				FromSlot:  0,
+			}, mockStream), "Could not call RPC method")
+
 	}(t)
+
+	//// Send in a loop to ensure it is delivered (busy wait for the service to subscribe to the state feed).
+	//for sent := 0; sent == 0; {
+	//	sent = bs.StateNotifier.StateFeed().Send(&feed.Event{
+	//		Type: statefeed.BlockProcessed,
+	//		Data: &statefeed.BlockProcessedData{},
+	//	})
+	//}
+
 	<-exitRoutine
 	cancel()
 }
