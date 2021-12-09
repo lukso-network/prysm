@@ -59,8 +59,9 @@ func TestServer_StreamNewPendingBlocks_ContextCanceled(t *testing.T) {
 	exitRoutine <- true
 }
 
-// TestServer_StreamNewPendingBlocks_PublishPreviousBlocks is publishing previous blocks from finalized epoch to head block
-func TestServer_StreamNewPendingBlocks_PublishPreviousBlocks(t *testing.T) {
+// TestServer_StreamNewPendingBlocks_PublishBlocks is publishing previous blocks in batch to finalized checkpoint
+// and publishing blocks from finalized epoch to head block
+func TestServer_StreamNewPendingBlocks_PublishBlocks(t *testing.T) {
 	db := dbTest.SetupDB(t)
 	params.UseMainnetConfig()
 	genBlock := testutil.NewBeaconBlock()
