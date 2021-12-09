@@ -3,13 +3,16 @@ package beacon
 import (
 	"context"
 	"github.com/golang/mock/gomock"
-	types "github.com/prysmaticlabs/eth2-types"
 	chainMock "github.com/prysmaticlabs/prysm/beacon-chain/blockchain/testing"
+	"github.com/prysmaticlabs/prysm/beacon-chain/core/helpers"
 	dbTest "github.com/prysmaticlabs/prysm/beacon-chain/db/testing"
+	v1 "github.com/prysmaticlabs/prysm/beacon-chain/state/v1"
+	pbp2p "github.com/prysmaticlabs/prysm/proto/beacon/p2p/v1"
 	ethpb "github.com/prysmaticlabs/prysm/proto/eth/v1alpha1"
 	"github.com/prysmaticlabs/prysm/proto/eth/v1alpha1/wrapper"
-	"github.com/prysmaticlabs/prysm/proto/interfaces"
+	"github.com/prysmaticlabs/prysm/shared/bytesutil"
 	"github.com/prysmaticlabs/prysm/shared/mock"
+	"github.com/prysmaticlabs/prysm/shared/params"
 	"github.com/prysmaticlabs/prysm/shared/testutil"
 	"github.com/prysmaticlabs/prysm/shared/testutil/assert"
 	"github.com/prysmaticlabs/prysm/shared/testutil/require"
@@ -58,86 +61,77 @@ func TestServer_StreamNewPendingBlocks_ContextCanceled(t *testing.T) {
 
 func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 	db := dbTest.SetupDB(t)
+	params.UseMainnetConfig()
+	genBlock := testutil.NewBeaconBlock()
+	genBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'G'}, 32)
+	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(genBlock)))
+	gRoot, err := genBlock.Block.HashTreeRoot()
+	require.NoError(t, err)
+	require.NoError(t, db.SaveGenesisBlockRoot(context.Background(), gRoot))
+
+	finalizedBlock := testutil.NewBeaconBlock()
+	finalizedBlock.Block.Slot = 32
+	finalizedBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'A'}, 32)
+	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(finalizedBlock)))
+	fRoot, err := finalizedBlock.Block.HashTreeRoot()
+	require.NoError(t, err)
+
+	justifiedBlock := testutil.NewBeaconBlock()
+	justifiedBlock.Block.Slot = 64
+	justifiedBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'B'}, 32)
+	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(justifiedBlock)))
+	jRoot, err := justifiedBlock.Block.HashTreeRoot()
+	require.NoError(t, err)
+
+	prevJustifiedBlock := testutil.NewBeaconBlock()
+	prevJustifiedBlock.Block.Slot = 96
+	prevJustifiedBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'C'}, 32)
+	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(prevJustifiedBlock)))
+	pjRoot, err := prevJustifiedBlock.Block.HashTreeRoot()
+	require.NoError(t, err)
+
+	s, err := v1.InitializeFromProto(&pbp2p.BeaconState{
+		Slot:                        1,
+		PreviousJustifiedCheckpoint: &ethpb.Checkpoint{Epoch: 3, Root: pjRoot[:]},
+		CurrentJustifiedCheckpoint:  &ethpb.Checkpoint{Epoch: 2, Root: jRoot[:]},
+		FinalizedCheckpoint:         &ethpb.Checkpoint{Epoch: 1, Root: fRoot[:]},
+	})
+	require.NoError(t, err)
+
+	b := testutil.NewBeaconBlock()
+	b.Block.Slot, err = helpers.StartSlot(s.PreviousJustifiedCheckpoint().Epoch)
+	require.NoError(t, err)
+
+	chainService := &chainMock.ChainService{}
 	ctx := context.Background()
-
-	ctx, cancel := context.WithCancel(ctx)
-
-	// Should return the proper genesis block if it exists.
-	parentRoot := [32]byte{1, 2, 3}
-	blk := testutil.NewBeaconBlock()
-	blk.Block.ParentRoot = parentRoot[:]
-	root, err := blk.Block.HashTreeRoot()
-	require.NoError(t, err)
-	require.NoError(t, db.SaveBlock(ctx, wrapper.WrappedPhase0SignedBeaconBlock(blk)))
-	require.NoError(t, db.SaveGenesisBlockRoot(ctx, root))
-	beaconState, err := testutil.NewBeaconState()
-	require.NoError(t, db.SaveState(ctx, beaconState, root))
-
-	count := types.Slot(100)
-	blks := make([]interfaces.SignedBeaconBlock, count)
-	var ckRoot [32]byte
-	var cp *ethpb.Checkpoint
-	for i := types.Slot(0); i < count; i++ {
-		b := testutil.NewBeaconBlock()
-		b.Block.Slot = i
-		require.NoError(t, err)
-		blks[i] = wrapper.WrappedPhase0SignedBeaconBlock(b)
-		if i == 96 {
-			ckRoot, err = b.Block.HashTreeRoot()
-			require.NoError(t, err)
-			cp = &ethpb.Checkpoint{
-				Epoch: 11,
-				Root:  root[:],
-			}
-		}
+	server := &Server{
+		Ctx:           ctx,
+		HeadFetcher:   &chainMock.ChainService{Block: wrapper.WrappedPhase0SignedBeaconBlock(b), State: s},
+		BeaconDB:      db,
+		StateNotifier: chainService.StateNotifier(),
+		FinalizationFetcher: &chainMock.ChainService{
+			FinalizedCheckPoint:         s.FinalizedCheckpoint(),
+			CurrentJustifiedCheckPoint:  s.CurrentJustifiedCheckpoint(),
+			PreviousJustifiedCheckPoint: s.PreviousJustifiedCheckpoint()},
 	}
-	require.NoError(t, db.SaveBlocks(ctx, blks))
-	require.NoError(t, err)
-	// a state is required to save checkpoint
-	require.NoError(t, db.SaveState(ctx, beaconState, ckRoot))
-	require.NoError(t, db.SaveFinalizedCheckpoint(ctx, cp))
-	require.NoError(t, err)
-	chainService := &chainMock.ChainService{
-		State:          beaconState,
-		CanonicalRoots: map[[32]byte]bool{},
-	}
-	bs := &Server{
-		Ctx:              ctx,
-		BeaconDB:         db,
-		BlockNotifier:    chainService.BlockNotifier(),
-		StateNotifier:    chainService.StateNotifier(),
-		HeadFetcher:      chainService,
-		CanonicalFetcher: chainService,
-	}
+
 	exitRoutine := make(chan bool)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockStream := mock.NewMockBeaconChain_StreamNewPendingBlocksServer(ctrl)
-	blkCnt := 0
 	mockStream.EXPECT().Send(
-		ethpb.MinimalConsensusInfo{
-			Epoch:            0,
-			ValidatorList:    nil,
-			EpochTimeStart:   0,
-			SlotTimeDuration: nil,
-		},
+		gomock.AssignableToTypeOf(&ethpb.StreamPendingBlockInfo{}),
 	).Do(func(args interface{}) {
-		blkCnt++
-		if blkCnt == 3 {
-			exitRoutine <- true
-		}
-	})
-	mockStream.EXPECT().Context().Return(ctx).AnyTimes()
+		exitRoutine <- true
+	}).AnyTimes()
+	mockStream.EXPECT().Context().Return(ctx).MaxTimes(0)
 
 	go func(tt *testing.T) {
-		assert.NoError(tt,
-			bs.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
-				BlockRoot: []byte{1, 2, 3},
-				FromSlot:  0,
-			}, mockStream), "Could not call RPC method")
-
+		assert.NoError(tt, server.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
+			BlockRoot: []byte{},
+			FromSlot:  0,
+		}, mockStream), "Could not call RPC method")
 	}(t)
 
 	<-exitRoutine
-	cancel()
 }
