@@ -78,6 +78,7 @@ func TestServer_StreamNewPendingBlocks_PublishBlocks(t *testing.T) {
 	fRoot, err := finalizedBlock.Block.HashTreeRoot()
 	require.NoError(t, err)
 
+	// Some example slot from epoch 2 period
 	s, err := v1.InitializeFromProto(&pbp2p.BeaconState{
 		Slot:                44,
 		FinalizedCheckpoint: &ethpb.Checkpoint{Epoch: 1, Root: fRoot[:]},
@@ -111,10 +112,11 @@ func TestServer_StreamNewPendingBlocks_PublishBlocks(t *testing.T) {
 	}).MinTimes(1)
 	mockStream.EXPECT().Context().Return(ctx).MaxTimes(1)
 
+	// Some example slot from epoch 1 period to run through batchSender func
 	go func(tt *testing.T) {
 		assert.NoError(tt, server.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
 			BlockRoot: []byte{},
-			FromSlot:  types.Slot(31),
+			FromSlot:  types.Slot(4),
 		}, mockStream), "Could not call RPC method")
 	}(t)
 
