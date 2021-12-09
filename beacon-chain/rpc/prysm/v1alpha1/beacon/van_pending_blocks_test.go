@@ -138,14 +138,6 @@ func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 
 	}(t)
 
-	//// Send in a loop to ensure it is delivered (busy wait for the service to subscribe to the state feed).
-	//for sent := 0; sent == 0; {
-	//	sent = bs.StateNotifier.StateFeed().Send(&feed.Event{
-	//		Type: statefeed.BlockProcessed,
-	//		Data: &statefeed.BlockProcessedData{},
-	//	})
-	//}
-
 	<-exitRoutine
 	cancel()
 }
