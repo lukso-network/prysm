@@ -3,8 +3,8 @@ package beacon
 import (
 	"context"
 	"github.com/golang/mock/gomock"
+	types "github.com/prysmaticlabs/eth2-types"
 	chainMock "github.com/prysmaticlabs/prysm/beacon-chain/blockchain/testing"
-	"github.com/prysmaticlabs/prysm/beacon-chain/core/helpers"
 	dbTest "github.com/prysmaticlabs/prysm/beacon-chain/db/testing"
 	v1 "github.com/prysmaticlabs/prysm/beacon-chain/state/v1"
 	pbp2p "github.com/prysmaticlabs/prysm/proto/beacon/p2p/v1"
@@ -59,7 +59,8 @@ func TestServer_StreamNewPendingBlocks_ContextCanceled(t *testing.T) {
 	exitRoutine <- true
 }
 
-func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
+// TestServer_StreamNewPendingBlocks_PublishPreviousBlocks is publishing previous blocks from finalized epoch to head block
+func TestServer_StreamNewPendingBlocks_PublishPreviousBlocks(t *testing.T) {
 	db := dbTest.SetupDB(t)
 	params.UseMainnetConfig()
 	genBlock := testutil.NewBeaconBlock()
@@ -76,30 +77,14 @@ func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 	fRoot, err := finalizedBlock.Block.HashTreeRoot()
 	require.NoError(t, err)
 
-	justifiedBlock := testutil.NewBeaconBlock()
-	justifiedBlock.Block.Slot = 64
-	justifiedBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'B'}, 32)
-	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(justifiedBlock)))
-	jRoot, err := justifiedBlock.Block.HashTreeRoot()
-	require.NoError(t, err)
-
-	prevJustifiedBlock := testutil.NewBeaconBlock()
-	prevJustifiedBlock.Block.Slot = 96
-	prevJustifiedBlock.Block.ParentRoot = bytesutil.PadTo([]byte{'C'}, 32)
-	require.NoError(t, db.SaveBlock(context.Background(), wrapper.WrappedPhase0SignedBeaconBlock(prevJustifiedBlock)))
-	pjRoot, err := prevJustifiedBlock.Block.HashTreeRoot()
-	require.NoError(t, err)
-
 	s, err := v1.InitializeFromProto(&pbp2p.BeaconState{
-		Slot:                        1,
-		PreviousJustifiedCheckpoint: &ethpb.Checkpoint{Epoch: 3, Root: pjRoot[:]},
-		CurrentJustifiedCheckpoint:  &ethpb.Checkpoint{Epoch: 2, Root: jRoot[:]},
-		FinalizedCheckpoint:         &ethpb.Checkpoint{Epoch: 1, Root: fRoot[:]},
+		Slot:                44,
+		FinalizedCheckpoint: &ethpb.Checkpoint{Epoch: 1, Root: fRoot[:]},
 	})
 	require.NoError(t, err)
 
 	b := testutil.NewBeaconBlock()
-	b.Block.Slot, err = helpers.StartSlot(s.PreviousJustifiedCheckpoint().Epoch)
+	b.Block.Slot = s.Slot()
 	require.NoError(t, err)
 
 	chainService := &chainMock.ChainService{}
@@ -109,10 +94,9 @@ func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 		HeadFetcher:   &chainMock.ChainService{Block: wrapper.WrappedPhase0SignedBeaconBlock(b), State: s},
 		BeaconDB:      db,
 		StateNotifier: chainService.StateNotifier(),
+		BlockNotifier: chainService.BlockNotifier(),
 		FinalizationFetcher: &chainMock.ChainService{
-			FinalizedCheckPoint:         s.FinalizedCheckpoint(),
-			CurrentJustifiedCheckPoint:  s.CurrentJustifiedCheckpoint(),
-			PreviousJustifiedCheckPoint: s.PreviousJustifiedCheckpoint()},
+			FinalizedCheckPoint: s.FinalizedCheckpoint()},
 	}
 
 	exitRoutine := make(chan bool)
@@ -123,13 +107,13 @@ func TestServer_StreamNewPendingBlocks_PublishPrevBlocksBatch(t *testing.T) {
 		gomock.AssignableToTypeOf(&ethpb.StreamPendingBlockInfo{}),
 	).Do(func(args interface{}) {
 		exitRoutine <- true
-	}).AnyTimes()
-	mockStream.EXPECT().Context().Return(ctx).MaxTimes(0)
+	}).MinTimes(1)
+	mockStream.EXPECT().Context().Return(ctx).MaxTimes(1)
 
 	go func(tt *testing.T) {
 		assert.NoError(tt, server.StreamNewPendingBlocks(&ethpb.StreamPendingBlocksRequest{
 			BlockRoot: []byte{},
-			FromSlot:  0,
+			FromSlot:  types.Slot(31),
 		}, mockStream), "Could not call RPC method")
 	}(t)
 
