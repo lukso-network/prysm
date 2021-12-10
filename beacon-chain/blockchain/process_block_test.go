@@ -1150,9 +1150,11 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 			if tt.wantErr {
 				assert.NotNil(t, err)
 				assert.DeepEqual(t, tt.wantErrString, err.Error())
-			} else {
-				assert.NoError(t, err)
+
+				return
 			}
+
+			assert.NoError(t, err)
 		})
 	}
 }
