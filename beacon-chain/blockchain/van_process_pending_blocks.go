@@ -14,11 +14,14 @@ import (
 	"time"
 )
 
-var (
-	// Getting confirmation status from orchestrator after each confirmationStatusFetchingInterval
+const (
+	// confirmationStatusFetchingInterval is the delay period between confirmation statuses from orchestrator
 	confirmationStatusFetchingInterval = 500 * time.Millisecond
 	// maxPendingBlockTryLimit is the maximum limit for pending status of a block
-	maxPendingBlockTryLimit       = 40
+	maxPendingBlockTryLimit = 40
+)
+
+var (
 	errInvalidBlock               = errors.New("invalid block found in orchestrator")
 	errPendingBlockCtxIsDone      = errors.New("pending block confirmation context is done, reinitialize")
 	errPendingBlockTryLimitExceed = errors.New("maximum wait is exceeded and orchestrator can not verify the block")
@@ -225,7 +228,6 @@ func (s *Service) waitForConfirmation(b interfaces.SignedBeaconBlock) error {
 	}
 }
 
-// verifyPandoraShardInfo verifies Pandora shard info
 func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeaconBlock) error {
 	var parentPanShards []*ethpb.PandoraShard
 
@@ -233,33 +235,20 @@ func (s *Service) verifyPandoraShardInfo(parentBlk, curBlk interfaces.SignedBeac
 	if curBlk == nil || curBlk.IsNil() {
 		return errUnknownCurrent
 	}
-	curBlkObj := curBlk.Block()
-	if curBlkObj.IsNil() {
-		return errUnknownCurrent
-	}
+
 	// For slot #1, we don't have shard info for previous block so short circuit here
-	if curBlkObj.Slot() == 1 {
+	if curBlk.Block().Slot() == 1 {
 		return nil
 	}
-	curBlkObjBody := curBlkObj.Body()
-	if curBlkObjBody.IsNil() {
-		return errUnknownCurrentBody
-	}
-	curPanShards := curBlkObjBody.PandoraShards()
+
+	curPanShards := curBlk.Block().Body().PandoraShards()
 
 	// Parent beacon block
 	if parentBlk == nil || parentBlk.IsNil() {
 		return errUnknownParent
 	}
-	parentBlkObj := parentBlk.Block()
-	if parentBlkObj.IsNil() {
-		return errUnknownParent
-	}
-	parentBlkObjBody := parentBlkObj.Body()
-	if parentBlkObjBody.IsNil() {
-		return errUnknownParentBody
-	}
-	parentPanShards = parentBlkObjBody.PandoraShards()
+
+	parentPanShards = parentBlk.Block().Body().PandoraShards()
 
 	// Checking length of current and parent block's pandora shard info
 	if len(curPanShards) > 0 && len(parentPanShards) > 0 {

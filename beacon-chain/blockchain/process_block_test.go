@@ -1075,11 +1075,11 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 	service.saveInitSyncBlock(gRoot, wrapper.WrappedPhase0SignedBeaconBlock(genesis))
 
 	tests := []struct {
-		name          string
-		blk           *ethpb.SignedBeaconBlock
-		time          uint64
-		wantErr       bool
-		wantErrString string
+		name    string
+		blk     *ethpb.SignedBeaconBlock
+		time    uint64
+		isErr   bool
+		wantErr error
 	}{
 		{
 			name: "Test with proper parent block and slot = 1",
@@ -1107,13 +1107,13 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 				b.Block.Slot = 2
 				return b
 			}(),
-			wantErr:       true,
-			wantErrString: "unknown parent beacon block",
+			isErr:   true,
+			wantErr: errors.New("unknown parent beacon block"),
 		},
 		{
-			name:          "Test with invalid current block",
-			wantErr:       true,
-			wantErrString: "unknown current beacon block",
+			name:    "Test with invalid current block",
+			isErr:   true,
+			wantErr: errors.New("unknown current beacon block"),
 		},
 		{
 			name: "Test with invalid current block body and slot != 1",
@@ -1124,8 +1124,8 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 				b.Block.Body = nil
 				return b
 			}(),
-			wantErr:       true,
-			wantErrString: "unknown current beacon block",
+			isErr:   true,
+			wantErr: errors.New("unknown current beacon block"),
 		},
 	}
 
@@ -1133,7 +1133,7 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			require.NoError(t, service.cfg.BeaconDB.SaveStateSummary(ctx, &pb.StateSummary{Slot: 1, Root: gRoot[:]}))
 			require.NoError(t, service.cfg.StateGen.SaveState(ctx, gRoot, s))
-			if !tt.wantErr {
+			if !tt.isErr {
 				require.NoError(t, service.verifyBlkPreState(ctx, wrapper.WrappedPhase0BeaconBlock(tt.blk.Block)))
 			}
 
@@ -1147,9 +1147,9 @@ func TestVerifyPandoraShardInfo(t *testing.T) {
 			}
 
 			err = service.verifyPandoraShardInfo(parentBlk, b)
-			if tt.wantErr {
+			if tt.isErr {
 				assert.NotNil(t, err)
-				assert.DeepEqual(t, tt.wantErrString, err.Error())
+				errors.Is(tt.wantErr, err)
 
 				return
 			}
