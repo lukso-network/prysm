@@ -32,9 +32,7 @@ var (
 	errInvalidConfirmationData    = errors.New("invalid orchestrator confirmation")
 	errParentDoesNotExist         = errors.New("beacon node doesn't have a parent in db with root")
 	errUnknownParent              = errors.New("unknown parent beacon block")
-	errUnknownParentBody          = errors.New("unknown parent beacon block body")
 	errUnknownCurrent             = errors.New("unknown current beacon block")
-	errUnknownCurrentBody         = errors.New("unknown current beacon block body")
 )
 
 // orcConfirmationData is the data which is sent after getting confirmation from orchestrator
@@ -52,56 +50,48 @@ type PendingQueueFetcher interface {
 	OrcVerification() bool
 }
 
-// CanPropose
 func (s *Service) CanPropose() bool {
 	s.canProposeLock.RLock()
 	defer s.canProposeLock.RUnlock()
 	return s.canPropose
 }
 
-// ActivateOrcVerification
 func (s *Service) ActivateOrcVerification() {
 	s.orcVerificationLock.Lock()
 	defer s.orcVerificationLock.Unlock()
 	s.orcVerification = true
 }
 
-// DeactivateOrcVerification
 func (s *Service) DeactivateOrcVerification() {
 	s.orcVerificationLock.Lock()
 	defer s.orcVerificationLock.Unlock()
 	s.orcVerification = false
 }
 
-// OrcVerification
 func (s *Service) OrcVerification() bool {
 	s.orcVerificationLock.RLock()
 	defer s.orcVerificationLock.RUnlock()
 	return s.orcVerification
 }
 
-// setLatestSentEpoch
 func (s *Service) setLatestSentEpoch(epoch types.Epoch) {
 	s.latestSentEpochLock.Lock()
 	defer s.latestSentEpochLock.Unlock()
 	s.latestSentEpoch = epoch
 }
 
-// getLatestSentEpoch
 func (s *Service) getLatestSentEpoch() types.Epoch {
 	s.latestSentEpochLock.RLock()
 	defer s.latestSentEpochLock.RUnlock()
 	return s.latestSentEpoch
 }
 
-// deactivateBlockProposal
 func (s *Service) deactivateBlockProposal() {
 	s.canProposeLock.Lock()
 	defer s.canProposeLock.Unlock()
 	s.canPropose = false
 }
 
-// activateBlockProposal
 func (s *Service) activateBlockProposal() {
 	s.canProposeLock.Lock()
 	defer s.canProposeLock.Unlock()
