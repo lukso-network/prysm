@@ -17,7 +17,7 @@ func (bs *Server) StreamNewPendingBlocks(
 	stream ethpb.BeaconChain_StreamNewPendingBlocksServer,
 ) error {
 	// prepareResponse prepares pending block info response
-	prepareBlockInfo := func(block *ethpb.BeaconBlock) (*ethpb.StreamPendingBlockInfo, error) {
+	prepareBlockInfo := func(block *ethpb.BeaconBlock, disableDelete bool) (*ethpb.StreamPendingBlockInfo, error) {
 		// retrieving finalized epoch and slot
 		finalizedCheckpoint := bs.FinalizationFetcher.FinalizedCheckpt()
 		fSlot, err := helpers.StartSlot(finalizedCheckpoint.Epoch)
@@ -30,11 +30,12 @@ func (bs *Server) StreamNewPendingBlocks(
 			Block:          block,
 			FinalizedSlot:  fSlot,
 			FinalizedEpoch: finalizedCheckpoint.Epoch,
+			IsSyncing:      disableDelete,
 		}, nil
 	}
 
 	// batchSender sends blocks from specific start epoch to end epoch
-	batchSender := func(start, end types.Epoch) error {
+	batchSender := func(start, end types.Epoch, disableDelete bool) error {
 		for i := start; i <= end; i++ {
 			blks, _, err := bs.BeaconDB.Blocks(bs.Ctx, filters.NewFilter().SetStartEpoch(i).SetEndEpoch(i))
 			if err != nil {
@@ -62,7 +63,7 @@ func (bs *Server) StreamNewPendingBlocks(
 					return status.Errorf(codes.Internal, "Could not send over of previous blocks stream: %v", err)
 				}
 
-				blockInfo, err := prepareBlockInfo(unwrappedBlk.Block)
+				blockInfo, err := prepareBlockInfo(unwrappedBlk.Block, disableDelete)
 				if err != nil {
 					return err
 				}
@@ -76,7 +77,7 @@ func (bs *Server) StreamNewPendingBlocks(
 	}
 
 	// sender method sends block from specific start slot to end slot
-	sender := func(start, end types.Slot) error {
+	sender := func(start, end types.Slot, disableDelete bool) error {
 		blks, _, err := bs.BeaconDB.Blocks(bs.Ctx, filters.NewFilter().SetStartSlot(start).SetEndSlot(end))
 		if err != nil {
 			return err
@@ -91,7 +92,7 @@ func (bs *Server) StreamNewPendingBlocks(
 				return status.Errorf(codes.Internal, "Could not send over stream: %v", err)
 			}
 
-			blockInfo, err := prepareBlockInfo(unwrappedBlk.Block)
+			blockInfo, err := prepareBlockInfo(unwrappedBlk.Block, disableDelete)
 			if err != nil {
 				return err
 			}
@@ -111,7 +112,7 @@ func (bs *Server) StreamNewPendingBlocks(
 	epochStart := helpers.SlotToEpoch(request.FromSlot)
 	epochEnd := cp.Epoch
 	if epochStart <= epochEnd {
-		if err := batchSender(epochStart, epochEnd); err != nil {
+		if err := batchSender(epochStart, epochEnd, true); err != nil {
 			return err
 		}
 		log.WithField("startEpoch", epochStart).WithField("endEpoch", epochEnd).
@@ -132,7 +133,7 @@ func (bs *Server) StreamNewPendingBlocks(
 	}
 	endSlot := headBlock.Block().Slot()
 	if startSlot+1 <= endSlot {
-		if err := sender(startSlot, endSlot); err != nil {
+		if err := sender(startSlot, endSlot, true); err != nil {
 			return err
 		}
 		log.WithField("startSlot", startSlot+1).WithField("endSlot", endSlot).
@@ -161,7 +162,7 @@ func (bs *Server) StreamNewPendingBlocks(
 					log.WithField("startSlot", startSlot).WithField("endSlot", endSlot).WithField("liveSyncStart", endSlot+1).
 						Info("Sending left over blocks")
 					if startSlot < endSlot {
-						if err := sender(startSlot, endSlot); err != nil {
+						if err := sender(startSlot, endSlot, true); err != nil {
 							return err
 						}
 					}
@@ -172,7 +173,13 @@ func (bs *Server) StreamNewPendingBlocks(
 					return status.Errorf(codes.Internal, "Could not send over stream: %v", err)
 				}
 
-				blockInfo, err := prepareBlockInfo(unwrappedBlk)
+				// orchestrator needs to know about syncing status
+				var disableDelete bool
+				if !bs.PendingQueueFetcher.OrcVerification() {
+					disableDelete = true
+				}
+
+				blockInfo, err := prepareBlockInfo(unwrappedBlk, disableDelete)
 				if err != nil {
 					return err
 				}

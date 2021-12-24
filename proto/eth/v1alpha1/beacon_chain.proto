@@ -924,4 +924,6 @@ message StreamPendingBlockInfo {
     uint64 finalized_slot = 2 [(ethereum.eth.ext.cast_type) = "github.com/prysmaticlabs/eth2-types.Slot"];
     // Epoch of the finalized block.
     uint64 finalized_epoch = 3 [(ethereum.eth.ext.cast_type) = "github.com/prysmaticlabs/eth2-types.Epoch"];
+    // Is this block comes from initial syncing or from live syncing
+    bool isSyncing = 4;
 }
