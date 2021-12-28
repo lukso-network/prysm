@@ -6,6 +6,7 @@ package sync
 
 import (
 	"context"
+	types "github.com/prysmaticlabs/eth2-types"
 	"sync"
 	"time"
 
@@ -289,4 +290,8 @@ type Checker interface {
 	Synced() bool
 	Status() error
 	Resync() error
+}
+
+type PeerSyncStatus interface {
+	HighestFinalizedEpoch() types.Epoch
 }

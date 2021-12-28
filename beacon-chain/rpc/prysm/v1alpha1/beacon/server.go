@@ -49,4 +49,5 @@ type Server struct {
 	SyncChecker                 sync.Checker
 	// Vanguard: pending blocks cache
 	PendingQueueFetcher blockchain.PendingQueueFetcher
+	SyncStatus          sync.PeerSyncStatus
 }

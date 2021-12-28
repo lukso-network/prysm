@@ -627,6 +627,7 @@ func (b *BeaconNode) registerRPCService() error {
 		// vanguard: EnableVanguardNode and UnconfirmedBlockFetcher is used for vanguard chain
 		EnableVanguardNode:  b.cliCtx.Bool(cmd.VanguardNetwork.Name),
 		PendingQueueFetcher: chainService,
+		SyncStatus:          syncService,
 	})
 
 	return b.services.RegisterService(rpcService)

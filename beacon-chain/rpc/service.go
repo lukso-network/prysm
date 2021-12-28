@@ -113,6 +113,7 @@ type Config struct {
 
 	// Vanguard un-confirmed cached block fetcher
 	PendingQueueFetcher blockchain.PendingQueueFetcher
+	SyncStatus          chainSync.PeerSyncStatus
 }
 
 // NewService instantiates a new RPC service instance that will
@@ -258,6 +259,7 @@ func (s *Service) Start() {
 		ReceivedAttestationsBuffer:  make(chan *ethpbv1alpha1.Attestation, attestationBufferSize),
 		CollectedAttestationsBuffer: make(chan []*ethpbv1alpha1.Attestation, attestationBufferSize),
 		PendingQueueFetcher:         s.pendingQueueFetcher,
+		SyncStatus:                  s.cfg.SyncStatus,
 	}
 	beaconChainServerV1 := &beacon.Server{
 		BeaconDB:           s.cfg.BeaconDB,

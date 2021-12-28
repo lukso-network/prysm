@@ -7,6 +7,7 @@ import (
 	chainMock "github.com/prysmaticlabs/prysm/beacon-chain/blockchain/testing"
 	dbTest "github.com/prysmaticlabs/prysm/beacon-chain/db/testing"
 	v1 "github.com/prysmaticlabs/prysm/beacon-chain/state/v1"
+	mockSync "github.com/prysmaticlabs/prysm/beacon-chain/sync/initial-sync/testing"
 	pbp2p "github.com/prysmaticlabs/prysm/proto/beacon/p2p/v1"
 	ethpb "github.com/prysmaticlabs/prysm/proto/eth/v1alpha1"
 	"github.com/prysmaticlabs/prysm/proto/eth/v1alpha1/wrapper"
@@ -43,6 +44,9 @@ func TestServer_StreamNewPendingBlocks_ContextCanceled(t *testing.T) {
 		StateNotifier: chainService.StateNotifier(),
 		BlockNotifier: chainService.BlockNotifier(),
 		BeaconDB:      db,
+		SyncStatus: &mockSync.Sync{
+			IsSyncing: true,
+		},
 	}
 
 	exitRoutine := make(chan bool)
@@ -96,7 +100,11 @@ func TestServer_StreamNewPendingBlocks_PublishBlocks(t *testing.T) {
 		StateNotifier: chainService.StateNotifier(),
 		BlockNotifier: chainService.BlockNotifier(),
 		FinalizationFetcher: &chainMock.ChainService{
-			FinalizedCheckPoint: s.FinalizedCheckpoint()},
+			FinalizedCheckPoint: s.FinalizedCheckpoint(),
+		},
+		SyncStatus: &mockSync.Sync{
+			IsSyncing: true,
+		},
 	}
 
 	exitRoutine := make(chan bool)

@@ -16,20 +16,33 @@ func (bs *Server) StreamNewPendingBlocks(
 	request *ethpb.StreamPendingBlocksRequest,
 	stream ethpb.BeaconChain_StreamNewPendingBlocksServer,
 ) error {
+
+	var highestFinalizedEpoch types.Epoch
+
 	// prepareResponse prepares pending block info response
 	prepareBlockInfo := func(block *ethpb.BeaconBlock) (*ethpb.StreamPendingBlockInfo, error) {
 		// retrieving finalized epoch and slot
 		finalizedCheckpoint := bs.FinalizationFetcher.FinalizedCheckpt()
-		fSlot, err := helpers.StartSlot(finalizedCheckpoint.Epoch)
+		fEpoch := finalizedCheckpoint.Epoch
+		fSlot, err := helpers.StartSlot(fEpoch + 1)
+
+		if highestFinalizedEpoch > fEpoch {
+			fEpoch = highestFinalizedEpoch
+			fSlot, err = helpers.StartSlot(highestFinalizedEpoch + 1)
+		}
+
 		if err != nil {
 			return nil, status.Errorf(codes.Internal, "Could not send over stream: %v", err)
 		}
+
+		log.WithField("slot", block.Slot).WithField("finalizedSlot", fSlot).
+			WithField("finalizedEpoch", fEpoch).Debug("Sending vanguard block to orchestrator")
 
 		// sending block info with finalized slot and epoch
 		return &ethpb.StreamPendingBlockInfo{
 			Block:          block,
 			FinalizedSlot:  fSlot,
-			FinalizedEpoch: finalizedCheckpoint.Epoch,
+			FinalizedEpoch: fEpoch,
 		}, nil
 	}
 
@@ -103,6 +116,7 @@ func (bs *Server) StreamNewPendingBlocks(
 		return nil
 	}
 
+	highestFinalizedEpoch = bs.SyncStatus.HighestFinalizedEpoch()
 	// publishing previous blocks from requested slot to finalized checkpoint
 	cp, err := bs.BeaconDB.FinalizedCheckpoint(bs.Ctx)
 	if err != nil {
@@ -181,7 +195,6 @@ func (bs *Server) StreamNewPendingBlocks(
 				if err := stream.Send(blockInfo); err != nil {
 					return status.Errorf(codes.Unavailable, "Could not send over stream: %v", err)
 				}
-				log.WithField("slot", data.Block.Slot()).Debug("Sent block to orchestrator")
 			}
 		case <-pBlockSub.Err():
 			return status.Error(codes.Aborted, "Subscriber closed, exiting goroutine")

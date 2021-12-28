@@ -2,6 +2,8 @@
 // sync status in unit tests.
 package testing
 
+import types "github.com/prysmaticlabs/eth2-types"
+
 // Sync defines a mock for the sync service.
 type Sync struct {
 	IsSyncing     bool
@@ -32,4 +34,8 @@ func (s *Sync) Resync() error {
 // Synced --
 func (s *Sync) Synced() bool {
 	return s.IsSynced
+}
+
+func (s *Sync) HighestFinalizedEpoch() types.Epoch {
+	return types.Epoch(0)
 }

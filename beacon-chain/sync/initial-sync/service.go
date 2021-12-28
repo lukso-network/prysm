@@ -5,6 +5,7 @@ package initialsync
 
 import (
 	"context"
+	types "github.com/prysmaticlabs/eth2-types"
 	"time"
 
 	"github.com/paulbellamy/ratecounter"
@@ -157,12 +158,23 @@ func (s *Service) Resync() error {
 	defer func() { s.synced.Set() }() // Reset it at the end of the method.
 	genesis := time.Unix(int64(headState.GenesisTime()), 0)
 
+	// Vanguard: Deactivating verification from orchestrator client
+	if s.cfg.EnableVanguardNode {
+		log.Info("Deactivating orchestrator verification in re-sync mode")
+		s.cfg.Chain.DeactivateOrcVerification()
+	}
+
 	s.waitForMinimumPeers()
 	if err = s.roundRobinSync(genesis); err != nil {
 		log = log.WithError(err)
 	}
 	log.WithField("slot", s.cfg.Chain.HeadSlot()).Info("Resync attempt complete")
 	return nil
+}
+
+// HighestFinalizedEpoch returns current finalized epoch of its connected peer
+func (s *Service) HighestFinalizedEpoch() types.Epoch {
+	return s.highestFinalizedEpoch()
 }
 
 func (s *Service) waitForMinimumPeers() {
